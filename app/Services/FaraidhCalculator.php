@@ -977,20 +977,20 @@ class FaraidhCalculator
             switch ($hubungan) {
                 case 'suami':
                     $nominal = $harta_bersih * (3 / 9);
-                    $label   = "3/9 (Aul Akdariyah)";
+                    $label   = "1/2 (Aul Akdariyah)";
                     break;
                 case 'ibu':
                     $nominal = $harta_bersih * (2 / 9);
-                    $label   = "2/9 (Aul Akdariyah)";
+                    $label   = "1/3 (Aul Akdariyah)";
                     break;
                 case 'kakek':
                     $nominal = $harta_bersih * (8 / 27);
-                    $label   = "8/27 (Akdariyah: 2/3 dari 4/9)";
+                    $label   = "1/6 (Aul Akdariyah)";
                     break;
                 case 'saudara perempuan sekandung':
                 case 'saudara perempuan sebapak':
                     $nominal = $harta_bersih * (4 / 27);
-                    $label   = "4/27 (Akdariyah: 1/3 dari 4/9)";
+                    $label   = "1/2 (Aul Akdariyah)";
                     break;
                 default:
                     $nominal = 0;

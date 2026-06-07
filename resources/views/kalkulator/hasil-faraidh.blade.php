@@ -120,6 +120,7 @@
 
         {{-- DETAIL PERHITUNGAN FARAIDH --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
             <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
                 <span class="w-1 h-5 bg-indigo-500 rounded-full"></span>
                 <h2 class="font-black text-gray-800 uppercase tracking-tight text-sm">
@@ -128,154 +129,202 @@
             </div>
 
             @php
-                $adaTashih =
-                    !empty($detailPerhitungan['tashih']) &&
-                    $detailPerhitungan['tashih'] != $detailPerhitungan['asal_masalah'];
+                $items        = $detailPerhitungan['items']         ?? [];
+                $asalMasalah  = $detailPerhitungan['asal_masalah']  ?? null;
+                $tashih       = $detailPerhitungan['tashih']        ?? null;
+                $aul          = $detailPerhitungan['aul']           ?? null;
+                $aulTashih    = $detailPerhitungan['aul_tashih']    ?? null;
+                $isAkdariyah  = $detailPerhitungan['is_akdariyah']  ?? false;
+                $isGharrawain = $detailPerhitungan['is_gharrawain'] ?? false;
+                $isMuqosamah  = $detailPerhitungan['is_muqosamah']  ?? false;
+
+                $adaTashih = !is_null($tashih) || !is_null($aulTashih);
+
+                $isAshobahLabel = fn($b) => str_contains(strtolower($b ?? ''), 'ashobah')
+                                        || str_contains(strtolower($b ?? ''), 'musytarakah');
+
+                // Precompute blok ashobah
+                $ashobahItems       = array_values(array_filter($items, fn($i) => $isAshobahLabel($i['bagian'])));
+                $ashobahTotalBaris  = array_sum(array_column($ashobahItems, 'jumlah'));
+                $ashobahSahamAwal   = $ashobahItems[0]['saham_awal'] ?? null;
+                $ashobahBlockRendered = false;
+
+                // Tashih untuk header: aul_tashih (Akdariyah) atau tashih biasa
+                $tashihHeader = $aulTashih ?? $tashih;
+
+                $fmt = fn($val) => is_null($val) ? '-'
+                    : (fmod(round((float)$val, 6), 1) == 0
+                        ? number_format((float)$val, 0)
+                        : rtrim(number_format((float)$val, 2, '.', ''), '0'));
             @endphp
 
-            {{-- Header Angka --}}
+            {{-- ===================== HEADER ANGKA ===================== --}}
             <div class="p-6 border-b bg-gray-50">
-                <div class="grid grid-cols-2 gap-4 max-w-md">
+                <div class="flex flex-wrap gap-8">
 
                     <div>
                         <p class="text-sm text-gray-500">Asal Masalah</p>
-                        <p class="text-4xl font-bold text-blue-600">
-                            {{ $detailPerhitungan['asal_masalah'] }}
-                        </p>
+                        <p class="text-4xl font-bold text-blue-600">{{ $asalMasalah ?? '-' }}</p>
                     </div>
 
-                    @if($adaTashih)
-                        <div>
-                            <p class="text-sm text-gray-500">Tashih</p>
-                            <p class="text-4xl font-bold text-emerald-600">
-                                {{ $detailPerhitungan['tashih'] }}
-                            </p>
-                        </div>
+                    @if($aul)
+                    <div>
+                        <p class="text-sm text-gray-500">'Aul</p>
+                        <p class="text-4xl font-bold text-rose-500">{{ $aul }}</p>
+                    </div>
+                    @endif
+
+                    @if($tashihHeader)
+                    <div>
+                        <p class="text-sm text-gray-500">{{ $aulTashih ? 'Aul Tashih' : 'Tashih' }}</p>
+                        <p class="text-4xl font-bold text-emerald-600">{{ $tashihHeader }}</p>
+                    </div>
                     @endif
 
                 </div>
             </div>
 
-            {{-- Tabel --}}
+            {{-- ===================== TABEL ===================== --}}
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-
                     <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
                         <tr>
-
-                            <th class="px-4 py-3 text-left">
-                                Ahli Waris
-                            </th>
-
-                            <th class="px-4 py-3 text-center">
-                                Bagian
-                            </th>
-
+                            <th class="px-4 py-3 text-left">Ahli Waris</th>
+                            <th class="px-4 py-3 text-center">Bagian</th>
+                            <th class="px-4 py-3 text-center">Saham Awal</th>
                             @if($adaTashih)
-
-                                <th class="px-4 py-3 text-center">
-                                    Saham Awal
-                                </th>
-
-                                <th class="px-4 py-3 text-center">
-                                    Saham Setelah Tashih
-                                </th>
-
-                            @else
-
-                                <th class="px-4 py-3 text-center">
-                                    Saham
-                                </th>
-
+                                <th class="px-4 py-3 text-center">Saham Setelah Tashih</th>
                             @endif
-
-                            <th class="px-4 py-3 text-center">
-                                Saham / Orang
-                            </th>
-
+                            <th class="px-4 py-3 text-center">Saham / Orang</th>
                         </tr>
                     </thead>
-
                     <tbody class="divide-y divide-gray-100">
 
-                        @foreach($detailPerhitungan['items'] as $item)
+                        @foreach($items as $item)
+                            @php $isAsh = $isAshobahLabel($item['bagian']); @endphp
 
                             @for($i = 1; $i <= $item['jumlah']; $i++)
+                            <tr class="{{ $isAsh ? 'bg-indigo-50/30' : '' }} hover:bg-gray-50/50">
 
-                                <tr>
+                                {{-- Nama --}}
+                                <td class="px-4 py-3 font-semibold">
+                                    {{ $item['hubungan'] }}
+                                    @if($item['jumlah'] > 1) {{ $i }} @endif
+                                </td>
 
-                                    {{-- Nama ahli waris --}}
-                                    <td class="px-4 py-3 font-semibold">
-
-                                        {{ $item['hubungan'] }}
-
-                                        @if($item['jumlah'] > 1)
-                                            {{ $i }}
+                                @if($isAsh)
+                                    {{-- Ashobah: Bagian & Saham Awal rowspan seluruh blok --}}
+                                    @if(!$ashobahBlockRendered && $i == 1)
+                                        @php $ashobahBlockRendered = true; @endphp
+                                        <td rowspan="{{ $ashobahTotalBaris }}"
+                                            class="px-4 py-3 text-center align-middle font-semibold text-indigo-700 bg-indigo-50/50">
+                                            Ashobah
+                                        </td>
+                                        <td rowspan="{{ $ashobahTotalBaris }}"
+                                            class="px-4 py-3 text-center align-middle font-semibold bg-indigo-50/50">
+                                            {{ $fmt($ashobahSahamAwal) }}
+                                        </td>
+                                        @if($adaTashih)
+                                        <td rowspan="{{ $ashobahTotalBaris }}"
+                                            class="px-4 py-3 text-center align-middle font-semibold bg-indigo-50/50">
+                                            {{ $fmt(array_sum(array_column($ashobahItems, 'saham_akhir'))) }}
+                                        </td>
                                         @endif
-
+                                    @endif
+                                    <td class="px-4 py-3 text-center font-bold text-blue-600">
+                                        {{ $fmt($item['saham_per_orang']) }}
                                     </td>
 
+                                @else
+                                    {{-- Furudh biasa --}}
                                     @if($i == 1)
-
-                                        {{-- Bagian --}}
                                         <td rowspan="{{ $item['jumlah'] }}"
                                             class="px-4 py-3 text-center align-middle">
-
                                             {{ $item['bagian'] }}
-
                                         </td>
-
+                                        <td rowspan="{{ $item['jumlah'] }}"
+                                            class="px-4 py-3 text-center align-middle">
+                                            {{ $fmt($item['saham_awal']) }}
+                                        </td>
                                         @if($adaTashih)
-
-                                            {{-- Saham Awal --}}
-                                            <td rowspan="{{ $item['jumlah'] }}"
-                                                class="px-4 py-3 text-center align-middle">
-
-                                                {{ $item['saham_awal'] ?? '-' }}
-
-                                            </td>
-
-                                            {{-- Saham Setelah Tashih --}}
-                                            <td rowspan="{{ $item['jumlah'] }}"
-                                                class="px-4 py-3 text-center align-middle">
-
-                                                {{ $item['saham_akhir'] ?? '-' }}
-
-                                            </td>
-
-                                        @else
-
-                                            {{-- Tidak ada tashih --}}
-                                            <td rowspan="{{ $item['jumlah'] }}"
-                                                class="px-4 py-3 text-center align-middle">
-
-                                                {{ $item['saham_awal'] ?? '-' }}
-
-                                            </td>
-
+                                        <td rowspan="{{ $item['jumlah'] }}"
+                                            class="px-4 py-3 text-center align-middle">
+                                            {{ $fmt($item['saham_akhir']) }}
+                                        </td>
                                         @endif
-
                                     @endif
-
-                                    {{-- Per orang --}}
                                     <td class="px-4 py-3 text-center font-bold text-blue-600">
-
-                                        {{ $item['saham_per_orang'] ?? '-' }}
-
+                                        {{ $fmt($item['saham_per_orang']) }}
                                     </td>
 
-                                </tr>
+                                @endif
 
+                            </tr>
                             @endfor
-
                         @endforeach
 
                     </tbody>
-
                 </table>
             </div>
-        </div>
 
+            {{-- ===================== CATATAN KASUS KHUSUS ===================== --}}
+
+            @if($isGharrawain)
+            <div class="mx-6 my-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3">
+                <div class="shrink-0 text-amber-500 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-black text-amber-700 mb-1">Kasus Gharrawain</p>
+                    <p class="text-xs text-amber-600 leading-relaxed">
+                        Setelah suami/istri mendapat bagiannya, sisa harta dibagi antara ibu dan bapak —
+                        ibu mendapat <strong>1/3 dari sisa</strong>, dan bapak mendapat sisanya sebagai <strong>ashobah</strong>.
+                        Kasus ini berlaku ketika pewaris hanya meninggalkan suami/istri, ibu, dan bapak tanpa anak maupun saudara.
+                    </p>
+                </div>
+            </div>
+            @endif
+
+            @if($isAkdariyah)
+            <div class="mx-6 my-4 p-4 bg-purple-50 border border-purple-200 rounded-xl flex gap-3">
+                <div class="shrink-0 text-purple-500 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-black text-purple-700 mb-1">Kasus Akdariyah</p>
+                    <p class="text-xs text-purple-600 leading-relaxed">
+                        Bagian kakek dan saudari perempuan digabungkan terlebih dahulu setelah 'aul,
+                        kemudian dibagi dengan rasio <strong>2:1</strong> —
+                        kakek mendapat <strong>2/3</strong> dan saudari mendapat <strong>1/3</strong> dari bagian gabungan tersebut.
+                    </p>
+                </div>
+            </div>
+            @endif
+
+            @if($isMuqosamah)
+            <div class="mx-6 my-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex gap-3">
+                <div class="shrink-0 text-blue-500 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-black text-blue-700 mb-1">Kasus Muqosamah</p>
+                    <p class="text-xs text-blue-600 leading-relaxed">
+                        Kakek mendapat bagian terbesar dari tiga pilihan: <strong>muqosamah</strong> (berbagi kepala dengan saudara),
+                        <strong>1/3 harta</strong>, atau <strong>1/6 harta</strong>.
+                        Pilihan yang paling menguntungkan kakek yang diterapkan.
+                    </p>
+                </div>
+            </div>
+            @endif
+
+        </div>
+        
         {{-- PELAJARI AHLI WARIS --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
