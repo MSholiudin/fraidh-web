@@ -718,6 +718,197 @@ class EdukasiAhliWarisSeeder extends Seeder
                 ],
                 'urutan' => 16,
             ],
+
+            [
+                'nama_ahli_waris'  => 'gharrawain',
+                'kelompok'         => 'Kasus Khusus',
+                'deskripsi_aturan' => 'Terjadi ketika pewaris hanya meninggalkan suami atau istri, ibu, dan bapak — tanpa anak, cucu, maupun saudara. Dalam kondisi ini ibu tidak mendapat 1/3 dari seluruh harta, melainkan 1/3 dari sisa setelah bagian suami/istri diambil.',
+                'dalil_arab'       => null,
+                'dalil_terjemahan' => 'Dinamakan Gharrawain (dua yang bercahaya) karena dua kasus ini sangat terkenal dalam ilmu faraidh: kasus dengan suami dan kasus dengan istri.',
+                'hijab_oleh'       => null,
+                'studi_kasus'      => [
+                    [
+                        'skenario' => 'Pewaris meninggalkan suami, ibu, dan bapak.',
+                        'solusi'   => 'Suami mendapat 1/2. Dari sisa 1/2, ibu mendapat 1/3 sisa (= 1/6 total) dan bapak mendapat 2/3 sisa (= 2/6 total) sebagai ashobah.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 6,
+                            'tashih'       => null,
+                            'baris' => [
+                                ['ahli_waris' => 'suami', 'bagian' => '1/2',             'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',   'bagian' => '1/3 sisa',        'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'bapak', 'bagian' => 'ashobah (sisa)',  'saham' => 2, 'saham_tashih' => null],
+                            ],
+                        ],
+                    ],
+                    [
+                        'skenario' => 'Pewaris meninggalkan istri, ibu, dan bapak.',
+                        'solusi'   => 'Istri mendapat 1/4. Dari sisa 3/4, ibu mendapat 1/3 sisa (= 1/4 total) dan bapak mendapat 2/3 sisa (= 2/4 total) sebagai ashobah.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 4,
+                            'tashih'       => null,
+                            'baris' => [
+                                ['ahli_waris' => 'istri', 'bagian' => '1/4',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',   'bagian' => '1/3 sisa',       'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'bapak', 'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                            ],
+                        ],
+                    ],
+                ],
+                'urutan' => 17,
+            ],
+        
+            [
+                'nama_ahli_waris'  => 'akdariyah',
+                'kelompok'         => 'Kasus Khusus',
+                'deskripsi_aturan' => 'Terjadi ketika pewaris meninggalkan suami, ibu, kakek, dan tepat satu saudari perempuan (kandung atau sebapak) — tanpa anak maupun cucu. Disebut Akdariyah karena penyelesaiannya unik: bagian kakek dan saudari perempuan digabung lalu dibagi ulang dengan rasio 2:1.',
+                'dalil_arab'       => null,
+                'dalil_terjemahan' => 'Dinamakan Akdariyah karena Zaid bin Tsabit pernah ditanya tentang kasus ini oleh seseorang dari Akdar, dan jawabannya berbeda dari kasus biasa.',
+                'hijab_oleh'       => null,
+                'studi_kasus'      => [
+                    [
+                        'skenario' => 'Pewaris meninggalkan suami, ibu, kakek, dan 1 saudara perempuan kandung.',
+                        'solusi'   => 'Langkah 1: Tetapkan bagian awal — suami 1/2, ibu 1/3, kakek 1/6, saudari 1/2. Total = 9/6 → terjadi Aul menjadi /9. Langkah 2: Gabungkan bagian kakek (1/9) + saudari (3/9) = 4/9, lalu bagi 2:1 → kakek 8/27, saudari 4/27.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 6,
+                            'tashih'       => 27,
+                            'aul'          => 9,
+                            'baris' => [
+                                ['ahli_waris' => 'suami',              'bagian' => '1/2 (Aul Akdariyah)', 'saham' => 3, 'saham_tashih' => 9],
+                                ['ahli_waris' => 'ibu',                'bagian' => '1/3 (Aul Akdariyah)', 'saham' => 2, 'saham_tashih' => 6],
+                                ['ahli_waris' => 'kakek',              'bagian' => '1/6 (Aul Akdariyah)', 'saham' => 1, 'saham_tashih' => 8],
+                                ['ahli_waris' => 'saudari pr kandung', 'bagian' => '1/2 (Aul Akdariyah)', 'saham' => 3, 'saham_tashih' => 4],
+                            ],
+                        ],
+                    ],
+                ],
+                'urutan' => 18,
+            ],
+        
+            [
+                'nama_ahli_waris'  => 'musytarakah',
+                'kelompok'         => 'Kasus Khusus',
+                'deskripsi_aturan' => 'Terjadi ketika pewaris meninggalkan suami, ibu, dua atau lebih saudara seibu, dan saudara laki-laki kandung — tanpa anak, cucu, bapak, maupun kakek. Dalam kondisi ini saudara laki-laki kandung yang biasanya hanya dapat ashobah, ikut berbagi 1/3 bersama saudara seibu (tidak mendapat sisa karena sisa sudah habis untuk suami dan ibu).',
+                'dalil_arab'       => null,
+                'dalil_terjemahan' => 'Disebut Musytarakah (berserikat) karena saudara kandung dan saudara seibu berserikat dalam 1/3. Juga disebut Himariyah karena ada yang berkata kepada Umar: "Anggaplah bapak kami adalah keledai (himar), kami tetap bersaudara satu ibu."',
+                'hijab_oleh'       => null,
+                'studi_kasus'      => [
+                    [
+                        'skenario' => 'Pewaris meninggalkan suami, ibu, 2 saudara seibu, dan 1 saudara laki-laki kandung.',
+                        'solusi'   => 'Suami 1/2, ibu 1/6. Total furudh = 4/6, sisa = 2/6 = 1/3. Saudara seibu normalnya dapat 1/3 dan saudara kandung dapat ashobah — namun ashobah sudah habis. Maka 1/3 dibagi rata antara saudara seibu (2 orang) dan saudara kandung (1 orang) = masing-masing 1/9.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 6,
+                            'tashih'       => 18,
+                            'baris' => [
+                                ['ahli_waris' => 'suami',           'bagian' => '1/2',                   'saham' => 3, 'saham_tashih' => 9],
+                                ['ahli_waris' => 'ibu',             'bagian' => '1/6',                   'saham' => 1, 'saham_tashih' => 3],
+                                ['ahli_waris' => 'saudara seibu 1', 'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
+                                ['ahli_waris' => 'saudara seibu 2', 'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
+                                ['ahli_waris' => 'saudara lk kand', 'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
+                            ],
+                        ],
+                    ],
+                ],
+                'urutan' => 19,
+            ],
+        
+            [
+                'nama_ahli_waris'  => 'aul',
+                'kelompok'         => 'Kasus Khusus',
+                'deskripsi_aturan' => 'Terjadi ketika total bagian seluruh ahli waris melebihi asal masalah (penyebut tidak cukup). Solusinya: semua bagian dikurangi secara proporsional — penyebut diganti dengan jumlah total pembilang. Aul hanya bisa terjadi pada asal masalah 6, 12, dan 24.',
+                'dalil_arab'       => null,
+                'dalil_terjemahan' => 'Aul pertama kali diterapkan oleh Umar bin Khattab RA setelah bermusyawarah dengan para sahabat.',
+                'hijab_oleh'       => null,
+                'studi_kasus'      => [
+                    [
+                        'skenario' => 'Suami, ibu, dan 2 anak perempuan (asal masalah 12, total saham 13).',
+                        'solusi'   => 'Suami harusnya 1/4 = 3 saham, ibu 1/6 = 2 saham, 2 anak pr 2/3 = 8 saham. Total = 13 > 12. Aul ke /13, semua dikurangi proporsional.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 12,
+                            'tashih'       => null,
+                            'aul'          => 13,
+                            'baris' => [
+                                ['ahli_waris' => 'suami',      'bagian' => "1/4 ('Aul)", 'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',        'bagian' => "1/6 ('Aul)", 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak pr 1',  'bagian' => "2/3 ('Aul)", 'saham' => 8, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak pr 2',  'bagian' => "2/3 ('Aul)", 'saham' => 8, 'saham_tashih' => null],
+                            ],
+                            'catatan' => "Total saham 13 > asal masalah 12 → penyebut dinaikkan menjadi 13. Tiap ahli waris menerima saham/13 × harta.",
+                        ],
+                    ],
+                    [
+                        'skenario' => 'Suami, ibu, 2 saudari kandung, dan 1 saudara seibu (asal masalah 6, total saham 8).',
+                        'solusi'   => 'Suami 1/2 = 3, ibu 1/6 = 1, 2 saudari kandung 2/3 = 4, saudara seibu 1/6 = 1. Total = 9 > 6. Aul ke /9.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 6,
+                            'tashih'       => null,
+                            'aul'          => 9,
+                            'baris' => [
+                                ['ahli_waris' => 'suami',         'bagian' => "1/2 ('Aul)", 'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',           'bagian' => "1/6 ('Aul)", 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudari kand 1','bagian' => "2/3 ('Aul)", 'saham' => 4, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudari kand 2','bagian' => "2/3 ('Aul)", 'saham' => 4, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara seibu', 'bagian' => "1/6 ('Aul)", 'saham' => 1, 'saham_tashih' => null],
+                            ],
+                            'catatan' => "Total saham 13 > asal masalah 6 → aul ke /9. Saudari kandung berbagi 4 saham berdua.",
+                        ],
+                    ],
+                ],
+                'urutan' => 20,
+            ],
+        
+            [
+                'nama_ahli_waris'  => 'muqosamah',
+                'kelompok'         => 'Kasus Khusus',
+                'deskripsi_aturan' => 'Terjadi ketika kakek mewaris bersama saudara (tanpa anak/cucu). Kakek memilih bagian terbesar dari tiga opsi: (1) Muqosamah — berbagi kepala dengan saudara (kakek dihitung 2 kepala), (2) 1/3 dari seluruh harta, (3) 1/6 dari seluruh harta. Opsi yang menghasilkan bagian terbesar untuk kakek yang dipilih.',
+                'dalil_arab'       => null,
+                'dalil_terjemahan' => 'Kakek bersama saudara adalah salah satu masalah paling rumit dalam ilmu faraidh. Zaid bin Tsabit memilih kakek berbagi dengan saudara, sedangkan Ibnu Mas\'ud memilih kakek menghijab saudara.',
+                'hijab_oleh'       => null,
+                'studi_kasus'      => [
+                    [
+                        'skenario' => 'Kakek dan 1 saudara laki-laki kandung (tanpa ahli waris lain).',
+                        'solusi'   => 'Opsi muqosamah: kakek = 2/(2+2) = 1/2, saudara = 1/2. Opsi 1/3: kakek = 1/3. Muqosamah lebih besar → dipilih.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 2,
+                            'tashih'       => null,
+                            'baris' => [
+                                ['ahli_waris' => 'kakek',          'bagian' => 'muqosamah (1/2)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara lk kand','bagian' => 'ashobah (sisa)',  'saham' => 1, 'saham_tashih' => null],
+                            ],
+                        ],
+                    ],
+                    [
+                        'skenario' => 'Kakek dan 4 saudara laki-laki kandung (tanpa ahli waris lain).',
+                        'solusi'   => 'Opsi muqosamah: kakek = 2/(2+8) = 1/5. Opsi 1/3: kakek = 1/3. 1/3 lebih besar → dipilih.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 3,
+                            'tashih'       => null,
+                            'baris' => [
+                                ['ahli_waris' => 'kakek',            'bagian' => '1/3 (terpilih)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara lk kand 1','bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara lk kand 2','bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara lk kand 3','bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara lk kand 4','bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                            ],
+                        ],
+                    ],
+                    [
+                        'skenario' => 'Kakek, istri, dan 2 saudara laki-laki kandung.',
+                        'solusi'   => 'Istri 1/4 dulu. Sisa = 3/4. Opsi muqosamah: kakek = 2/(2+4) × sisa. Opsi 1/3 sisa: kakek = 1/3 × sisa. Opsi 1/6 total: kakek = 1/6. Pilih yang terbesar.',
+                        'tabel_perhitungan' => [
+                            'asal_masalah' => 4,
+                            'tashih'       => null,
+                            'baris' => [
+                                ['ahli_waris' => 'istri',            'bagian' => '1/4',             'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'kakek',            'bagian' => '1/3 sisa',        'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara lk kand 1','bagian' => 'ashobah (sisa)',  'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara lk kand 2','bagian' => 'ashobah (sisa)',  'saham' => 1, 'saham_tashih' => null],
+                            ],
+                        ],
+                    ],
+                ],
+                'urutan' => 21,
+            ],
+
         ];
 
         foreach ($data as $item) {

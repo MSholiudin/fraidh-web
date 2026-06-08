@@ -35,31 +35,15 @@ class FaraidhDetailService
 
         foreach ($hasil as $h) {
             $b = $h['bagian'] ?? '';
-            if (str_contains($b, 'Akdariyah'))
-                $adaAkdariyah  = true;
+            if (str_contains($b, 'Akdariyah'))                                          $adaAkdariyah  = true;
             if (str_contains(strtolower($b), 'gharawain') ||
-                str_contains(strtolower($b), 'gharrawain'))
-                $adaGharrawain = true;
-            if (str_contains(strtolower($b), 'muqosamah'))
-                $adaMuqosamah  = true;
+                str_contains(strtolower($b), 'gharrawain'))                             $adaGharrawain = true;
+            if (str_contains(strtolower($b), 'muqosamah'))                             $adaMuqosamah  = true;
         }
 
         $items = $this->buildItems($hasil, $adaAkdariyah, $adaGharrawain);
 
         $asalMasalah = $this->hitungAsalMasalah($items);
-        if ($asalMasalah === null) {
-            $totalKepala = 0;
-            foreach ($items as $item) {
-                $bobot = $this->parseAshobahWeight($item['bagian']);
-                if ($bobot !== null) {
-                    $totalKepala += $bobot * ($item['jumlah'] ?? 1);
-                }
-            }
-            if ($totalKepala > 0) {
-                $asalMasalah = $totalKepala;
-            }
-        }
-
         $items       = $this->hitungSahamDzawilFurudh($items, $asalMasalah);
 
         [$totalSahamFurudh, $sisaSaham] = $this->hitungSisaSaham($items, $asalMasalah);
@@ -80,7 +64,7 @@ class FaraidhDetailService
 
         $items  = $this->hitungSahamAshobah($items, $sisaSaham);
         $items  = $this->hitungSahamProporsional($items, $asalMasalah, $hasil);
-        $tashih = $this->hitungTashih($items, $asalMasalah, $sisaSaham);
+        $tashih = $this->hitungTashih($items, $asalMasalah);
         $items  = $this->hitungSahamAkhir($items, $asalMasalah, $tashih, $adaAkdariyah);
 
         // =============================================
@@ -146,14 +130,14 @@ class FaraidhDetailService
 
             // Override fraction untuk Akdariyah
             if ($adaAkdariyah) {
-                $fraction = $akdariyahFurudh[strtolower($bagian)] ?? $this->parseFraction($bagian, $item['jumlah'] ?? 1);
+                $fraction = $akdariyahFurudh[strtolower($bagian)] ?? $this->parseFraction($bagian);
             }
             // Gharrawain: bapak "1/6 + Ashobah" diperlakukan murni ashobah (skip 1/6 dari KPK)
             elseif ($adaGharrawain && preg_match('/^\d+\/\d+\s*\+\s*ashobah/i', $bagian)) {
                 $fraction = null;
             }
             else {
-                $fraction = $this->parseFraction($bagian, $item['jumlah'] ?? 1);
+                $fraction = $this->parseFraction($bagian);
             }
 
             $items[] = [
@@ -351,7 +335,7 @@ class FaraidhDetailService
     //     (total kepala = Σ bobot × jumlah_orang di semua grup ashobah)
     // =========================================================
 
-    private function hitungTashih(array $items, ?int $asalMasalah, float $sisaSaham = 0): ?int
+    private function hitungTashih(array $items, ?int $asalMasalah): ?int
     {
         if (! $asalMasalah) {
             return null;
@@ -371,22 +355,19 @@ class FaraidhDetailService
         }
 
         // (b) Cek ashobah: sisa ashobah vs total kepala
-        //
-        // BUG FIX: Sebelumnya $sisaAshobah dijumlah dari saham_awal tiap grup ashobah.
-        // Masalahnya: setiap grup mendapat saham_awal = sisaSaham PENUH (bukan porsinya),
-        // sehingga jika ada N grup, sisaAshobah = N × sisaSaham → fmod bisa salah.
-        //
-        // Solusi: gunakan $sisaSaham yang diteruskan dari generate() — nilai tunggal
-        // yang merepresentasikan sisa harta setelah seluruh furudh diambil.
+        // Ambil sisa ashobah = total saham_awal semua grup ashobah (sudah proporsional)
+        // Total kepala = Σ total_kepala tiap grup ashobah
         $totalKepalaAshobah = 0;
+        $sisaAshobah        = 0;
 
         foreach ($items as $item) {
             if ($this->parseAshobahWeight($item['bagian']) === null) continue;
             $totalKepalaAshobah += $item['total_kepala'] ?? ($item['jumlah'] ?? 1);
+            $sisaAshobah        += $item['saham_awal'] ?? 0;
         }
 
-        if ($totalKepalaAshobah > 1 && $sisaSaham > 0) {
-            if (fmod(round($sisaSaham, 6), $totalKepalaAshobah) != 0) {
+        if ($totalKepalaAshobah > 1 && $sisaAshobah > 0) {
+            if (fmod(round($sisaAshobah, 6), $totalKepalaAshobah) != 0) {
                 $tashih *= $totalKepalaAshobah;
             }
         }
@@ -507,11 +488,13 @@ class FaraidhDetailService
         $lower = strtolower($bagian);
 
         return str_contains($lower, 'gharawain')
-            || str_contains($lower, 'gharrwain')         // typo fallback
-            || str_contains($lower, 'muqosamah')         // mencakup semua varian muqosamah
-            || str_contains($lower, '1/3 sisa (terpilih)') // kakek: muqosamah tanpa kata 'muqosamah'
-            || str_contains($lower, '1/6 (minimal)')     // kakek: batas minimal
-            || str_contains($lower, 'radd');              // mencakup 'sisa (radd)' juga
+            || str_contains($lower, 'gharrwain')    // typo fallback
+            || str_contains($lower, 'muqosamah')
+            || str_contains($lower, 'radd')
+            || str_contains($lower, 'sisa (radd)')
+            || str_contains($lower, '1/3 sisa (terpilih)')
+            || str_contains($lower, '1/6 (minimal)')
+            || str_contains($lower, 'muqosamah = 1/3 sisa');
     }
 
     // =========================================================
@@ -520,7 +503,7 @@ class FaraidhDetailService
     // Hanya untuk label dzawil furudh murni
     // =========================================================
 
-    private function parseFraction(string $bagian, int $jumlah = 1): ?array
+    private function parseFraction(string $bagian): ?array
     {
         // Skip label proporsional (tidak masuk asal masalah berbasis KPK)
         if ($this->isLabelProporsional($bagian)) {
@@ -535,45 +518,23 @@ class FaraidhDetailService
         // PRIORITAS: "1/6 + Ashobah ..." → ambil HANYA pecahan awal (1/6)
         // Harus dicek SEBELUM parseAshobahWeight karena label ini mengandung
         // kata "ashobah" namun bagian furudhnya (1/6) tetap masuk asal masalah
-        $baseNumerator = null;
-        $baseDenominator = null;
-
         if (preg_match('/^(\d+)\/(\d+)\s*\+\s*ashobah/i', $bagian, $matches)) {
-            $baseNumerator = (int) $matches[1];
-            $baseDenominator = (int) $matches[2];
+            return [
+                'numerator'   => (int) $matches[1],
+                'denominator' => (int) $matches[2],
+            ];
         }
+
         // Skip ashobah murni (setelah pengecekan campuran di atas)
-        elseif ($this->parseAshobahWeight($bagian) !== null) {
+        if ($this->parseAshobahWeight($bagian) !== null) {
             return null;
         }
+
         // Standar: pola \d+/\d+ di mana saja dalam string
-        elseif (preg_match('/(\d+)\/(\d+)/', $bagian, $matches)) {
-            $baseNumerator = (int) $matches[1];
-            $baseDenominator = (int) $matches[2];
-        }
-
-        if ($baseNumerator !== null && $baseDenominator !== null) {
-            // Check if there is a "dibagi N" in the label
-            if (preg_match('/dibagi\s*(\d+)/i', $bagian, $divMatches)) {
-                $n = (int) $divMatches[1];
-                if ($n > 0) {
-                    // Formula: (baseFraction / n) * jumlah
-                    // = (baseNumerator * jumlah) / (baseDenominator * n)
-                    $num = $baseNumerator * $jumlah;
-                    $den = $baseDenominator * $n;
-
-                    // Simplify fraction
-                    $gcd = $this->gcd($num, $den);
-                    return [
-                        'numerator'   => $num / $gcd,
-                        'denominator' => $den / $gcd,
-                    ];
-                }
-            }
-
+        if (preg_match('/(\d+)\/(\d+)/', $bagian, $matches)) {
             return [
-                'numerator'   => $baseNumerator,
-                'denominator' => $baseDenominator,
+                'numerator'   => (int) $matches[1],
+                'denominator' => (int) $matches[2],
             ];
         }
 

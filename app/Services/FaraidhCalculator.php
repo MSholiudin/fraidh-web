@@ -188,10 +188,10 @@ class FaraidhCalculator
 
             case $hub === 'istri':
                 if ($f['has_anak'] || $f['has_cucu']) {
-                    $porsi = 0.125;
+                    $porsi = 0.125 / $c['istri'];
                     $label = $c['istri'] > 1 ? "1/8 (dibagi {$c['istri']})" : "1/8";
                 } else {
-                    $porsi = 0.25;
+                    $porsi = 0.25 / $c['istri'];
                     $label = $c['istri'] > 1 ? "1/4 (dibagi {$c['istri']})" : "1/4";
                 }
                 break;
@@ -908,16 +908,10 @@ class FaraidhCalculator
 
     private static function hitungAul($total_harta, $hasil_faraidh, $flags)
     {
-        $label_ashobah = [
-            'Ashobah Binafsihi', 'Ashobah Bil Ghoiri',
-            'Ashobah Bil Ghoiri (2 bagian)', 'Ashobah Bil Ghoiri (1 bagian)',
-            "Ashobah Ma'al Ghoiri", 'Ashobah',
-        ];
-
         $bagian_pecahan = [];
         foreach ($hasil_faraidh as $r) {
             if ($r['nominal'] <= 0) continue;
-            if (in_array($r['label'], $label_ashobah)) continue;
+            if (strpos($r['label'], 'Ashobah') !== false) continue;
             if (strpos($r['label'], 'Terhijab') !== false) continue;
 
             [$pembilang, $penyebut] = self::labelKePecahan($r['label']);
@@ -942,7 +936,7 @@ class FaraidhCalculator
 
         foreach ($hasil_faraidh as &$r) {
             if ($r['nominal'] <= 0) continue;
-            if (in_array($r['label'], $label_ashobah)) continue;
+            if (strpos($r['label'], 'Ashobah') !== false) continue;
             if (strpos($r['label'], 'Terhijab') !== false) continue;
 
             [$pembilang, $penyebut] = self::labelKePecahan($r['label']);
@@ -1037,8 +1031,22 @@ class FaraidhCalculator
     private static function labelKePecahan($label)
     {
         if (str_contains($label, "1/2"))  return [1, 2];
-        if (str_contains($label, "1/4"))  return [1, 4];
-        if (str_contains($label, "1/8"))  return [1, 8];
+        if (str_contains($label, "1/4")) {
+            if (str_contains($label, "dibagi")) {
+                preg_match('/dibagi\s*(\d+)/', $label, $m);
+                $n = isset($m[1]) ? (int)$m[1] : 1;
+                return [1, 4 * $n];
+            }
+            return [1, 4];
+        }
+        if (str_contains($label, "1/8")) {
+            if (str_contains($label, "dibagi")) {
+                preg_match('/dibagi\s*(\d+)/', $label, $m);
+                $n = isset($m[1]) ? (int)$m[1] : 1;
+                return [1, 8 * $n];
+            }
+            return [1, 8];
+        }
         if (str_contains($label, "2/3")) {
             if (str_contains($label, "dibagi")) {
                 preg_match('/dibagi\s*(\d+)/', $label, $m);

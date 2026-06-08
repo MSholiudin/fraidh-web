@@ -6,884 +6,1074 @@ use Exception;
 
 class FaraidhCalculator
 {
-    public static function engine_faraidh_full($harta_bersih, $daftar_aw)
+    public static function calculate($harta_bersih, $daftar_ahli_waris)
     {
-        // Ambil nama hubungan semua ahli waris
-        $aw_names = array_map(function($a) {
-            return strtolower($a['hubungan']);
-        }, $daftar_aw);
-        
-        // Hitung jumlah masing-masing ahli waris
-        $count_anak_lk = self::countOccurrences($aw_names, 'anak laki-laki');
-        $count_anak_pr = self::countOccurrences($aw_names, 'anak perempuan');
-        $count_cucu_lk = self::countOccurrences($aw_names, 'cucu laki-laki');
-        $count_cucu_pr = self::countOccurrences($aw_names, 'cucu perempuan');
-        $count_sdr_kand_lk = self::countOccurrences($aw_names, 'saudara laki-laki sekandung');
-        $count_sdr_kand_pr = self::countOccurrences($aw_names, 'saudara perempuan sekandung');
-        $count_sdr_sebpk_lk = self::countOccurrences($aw_names, 'saudara laki-laki sebapak');
-        $count_sdr_sebpk_pr = self::countOccurrences($aw_names, 'saudara perempuan sebapak');
-        $count_sdr_seibu = self::countOccurrences($aw_names, 'saudara seibu');
-        $count_nenek = self::countOccurrences($aw_names, 'nenek pihak bapak') + 
-                      self::countOccurrences($aw_names, 'nenek pihak ibu');
-        
-        // Flags kondisi
-        $has_anak = ($count_anak_lk > 0) || ($count_anak_pr > 0);
-        $has_anak_lk = $count_anak_lk > 0;
-        $has_anak_pr = $count_anak_pr > 0;
-        $has_cucu = ($count_cucu_lk > 0) || ($count_cucu_pr > 0);
-        $has_cucu_lk = $count_cucu_lk > 0;
-        $has_cucu_pr = $count_cucu_pr > 0;
-        $has_bapak = in_array('bapak', $aw_names);
-        $has_ibu = in_array('ibu', $aw_names);
-        $has_kakek = in_array('kakek', $aw_names);
-        $has_sdr_kand = ($count_sdr_kand_lk > 0) || ($count_sdr_kand_pr > 0);
-        $has_sdr_sebpk = ($count_sdr_sebpk_lk > 0) || ($count_sdr_sebpk_pr > 0);
-        $has_sdr_seibu = $count_sdr_seibu > 0;
+        return self::engine_faraidh_full($harta_bersih, $daftar_ahli_waris);
+    }
+
+    private static function engine_faraidh_full($harta_bersih, $daftar_aw)
+    {
+        $flags = self::buildFlags($daftar_aw);
+
+        if ($flags['is_akdariyah']) {
+            return self::selesaikanAkdariyah($harta_bersih, $daftar_aw);
+        }
+
+        [$hasil_faraidh, $pilihan_kakek] = self::hitungBagianTetap($harta_bersih, $daftar_aw, $flags);
+        $hasil_faraidh = self::hitungAshobah($harta_bersih, $hasil_faraidh, $flags, $pilihan_kakek);
+        $hasil_faraidh = self::hitungAshobahMaalGhoiri($harta_bersih, $hasil_faraidh);
+        $hasil_faraidh = self::hitungRadd($harta_bersih, $hasil_faraidh);
+        $hasil_faraidh = self::hitungAul($harta_bersih, $hasil_faraidh, $flags);
+
+        $c = $flags['count'];
+        $nenek_bapak_aktif = !$flags['has_ibu'] && !$flags['has_bapak'] && $c['nenek_bapak'] > 0;
+        $nenek_ibu_aktif   = !$flags['has_ibu'] && $c['nenek_ibu'] > 0;
+
+        if ($nenek_bapak_aktif && $nenek_ibu_aktif) {
+            $hasil_faraidh[] = [
+                'hubungan' => 'catatan',
+                'label'    => 'Perlu Konsultasi',
+                'nominal'  => 0,
+                'catatan'  => 'Sistem mengasumsikan kedua nenek memiliki kedudukan yang sejajar sehingga berbagi 1/6 secara rata. Namun jika tingkat kedekatan keduanya berbeda, salah satu nenek bisa terhijab. Mohon konsultasikan dengan ahli faraidh.',
+            ];
+        }
+
+        return $hasil_faraidh;
+    }
+
+    // =========================================================
+    // TAHAP 0: BUILD FLAGS
+    // =========================================================
+
+    private static function buildFlags($daftar_aw)
+    {
+        $aw_names = array_map(fn($a) => strtolower($a['hubungan']), $daftar_aw);
+
+        $count = [
+            'anak_lk'      => self::countOccurrences($aw_names, 'anak laki-laki'),
+            'anak_pr'      => self::countOccurrences($aw_names, 'anak perempuan'),
+            'istri'        => self::countOccurrences($aw_names, 'istri'),
+            'cucu_lk'      => self::countOccurrences($aw_names, 'cucu laki-laki'),
+            'cucu_pr'      => self::countOccurrences($aw_names, 'cucu perempuan'),
+            'sdr_kand_lk'  => self::countOccurrences($aw_names, 'saudara laki-laki sekandung'),
+            'sdr_kand_pr'  => self::countOccurrences($aw_names, 'saudara perempuan sekandung'),
+            'sdr_sebpk_lk' => self::countOccurrences($aw_names, 'saudara laki-laki sebapak'),
+            'sdr_sebpk_pr' => self::countOccurrences($aw_names, 'saudara perempuan sebapak'),
+            'sdr_seibu'    => self::countOccurrences($aw_names, 'saudara seibu'),
+            'nenek_bapak'  => self::countOccurrences($aw_names, 'nenek pihak bapak'),
+            'nenek_ibu'    => self::countOccurrences($aw_names, 'nenek pihak ibu'),
+            'nenek'        => self::countOccurrences($aw_names, 'nenek pihak bapak')
+                            + self::countOccurrences($aw_names, 'nenek pihak ibu'),
+        ];
+
         $has_suami = in_array('suami', $aw_names);
-        $has_istri = in_array('istri', $aw_names);
-        
-        $total_harta = $harta_bersih;
+        $has_ibu   = in_array('ibu', $aw_names);
+        $has_kakek = in_array('kakek', $aw_names);
+        $has_bapak = in_array('bapak', $aw_names);
+
+        // --- Musytarakah ---
+        $is_musytarakah_candidate = (
+            $has_suami &&
+            $has_ibu &&
+            $count['sdr_seibu'] >= 2 &&
+            $count['sdr_kand_lk'] > 0 &&
+            $count['anak_lk'] === 0 && $count['anak_pr'] === 0 &&
+            $count['cucu_lk'] === 0 && $count['cucu_pr'] === 0 &&
+            !$has_bapak && !$has_kakek
+        );
+
+        $sisa_untuk_ashobah_musytarakah = false;
+        if ($is_musytarakah_candidate) {
+            $total_tanpa_sdr_kand = 0.5 + 1/6 + 1/3;
+            $sisa_untuk_ashobah_musytarakah = ($total_tanpa_sdr_kand >= 1.0 - 0.001);
+        }
+
+        // --- Akdariyah ---
+        // Syarat: suami + ibu + kakek + tepat 1 saudari pr (kandung ATAU sebapak), tanpa anak/cucu
+        $is_akdariyah = false;
+        if ($has_suami && $has_ibu && $has_kakek && !$has_bapak
+            && $count['anak_lk'] === 0 && $count['anak_pr'] === 0
+            && $count['cucu_lk'] === 0 && $count['cucu_pr'] === 0
+        ) {
+            $total_saudara_lk = $count['sdr_kand_lk'] + $count['sdr_sebpk_lk'];
+            $total_saudari_pr = $count['sdr_kand_pr'] + $count['sdr_sebpk_pr'];
+            if ($total_saudara_lk === 0 && $total_saudari_pr === 1) {
+                $is_akdariyah = true;
+            }
+        }
+
+        return [
+            'count'          => $count,
+            'aw_names'       => $aw_names,
+            'has_anak'       => ($count['anak_lk'] > 0) || ($count['anak_pr'] > 0),
+            'has_anak_lk'    => $count['anak_lk'] > 0,
+            'has_anak_pr'    => $count['anak_pr'] > 0,
+            'has_cucu'       => ($count['cucu_lk'] > 0) || ($count['cucu_pr'] > 0),
+            'has_cucu_lk'    => $count['cucu_lk'] > 0,
+            'has_cucu_pr'    => $count['cucu_pr'] > 0,
+            'has_bapak'      => $has_bapak,
+            'has_ibu'        => $has_ibu,
+            'has_kakek'      => $has_kakek,
+            'has_suami'      => $has_suami,
+            'has_istri'      => in_array('istri', $aw_names),
+            'has_sdr_kand'   => ($count['sdr_kand_lk'] > 0) || ($count['sdr_kand_pr'] > 0),
+            'has_sdr_sebpk'  => ($count['sdr_sebpk_lk'] > 0) || ($count['sdr_sebpk_pr'] > 0),
+            'has_sdr_seibu'  => $count['sdr_seibu'] > 0,
+            'is_musytarakah' => $is_musytarakah_candidate && $sisa_untuk_ashobah_musytarakah,
+            'is_akdariyah'   => $is_akdariyah,
+        ];
+    }
+
+    // =========================================================
+    // TAHAP 1: BAGIAN TETAP (ASHABUL FURUD)
+    // =========================================================
+
+    private static function hitungBagianTetap($total_harta, $daftar_aw, $flags)
+    {
         $hasil_faraidh = [];
         $data_sementara = [];
-        
-        // Variabel untuk menyimpan pilihan kakek
-        $pilihan_kakek = null;  // 'ashobah', 'sepertiga', 'muqossamah'
-        $bagian_kakek_terpilih = 0;
-        
-        // --- TAHAP 1: ASHABUL FURUD (Bagian Pasti) ---
+        $pilihan_kakek = null;
+
         foreach ($daftar_aw as $aw) {
             $hub = strtolower($aw['hubungan']);
-            $porsi = 0.0;
-            $label = "";
-            
-            // --- SUAMI & ISTRI ---
-            if ($hub == 'suami') {
-                if ($has_anak || $has_cucu) {
-                    $porsi = 0.25;
-                    $label = "1/4";  // R05
-                } else {
-                    $porsi = 0.5;
-                    $label = "1/2";   // R04
-                }
-            } elseif ($hub == 'istri') {
-                if ($has_anak || $has_cucu) {
-                    $porsi = 0.125;
-                    $label = "1/8";  // R07
-                } else {
-                    $porsi = 0.25;
-                    $label = "1/4";   // R06
-                }
-            }
-            
-            // --- IBU ---
-            elseif ($hub == 'ibu') {
-                // Ibu dapat 1/6 jika:
-                // 1. Ada anak atau cucu
-                // 2. Ada lebih dari 1 saudara seibu
-                // 3. Ada saudara kandung (sekandung) atau saudara sebapak
-                if ($has_anak || $has_cucu || $count_sdr_seibu > 1 || $has_sdr_kand || $has_sdr_sebpk) {
-                    $porsi = 1/6;
-                    $label = "1/6";    // IB02
-                } else {
-                    $porsi = 1/3;
-                    $label = "1/3";    // IB01
-                }
-            }
-            
-            // --- BAPAK ---
-            elseif ($hub == 'bapak') {
-                if ($has_anak_lk || $has_cucu_lk) {
-                    $porsi = 1/6;
-                    $label = "1/6";    // BP01
-                } else {
-                    // Bagian 1/6 akan diambil nanti, sisa sebagai ashobah
-                    $porsi = 1/6;
-                    $label = "1/6 + Ashobah";
-                }
-            }
-            
-            // --- ANAK PEREMPUAN ---
-            elseif ($hub == 'anak perempuan') {
-                if (!$has_anak_lk) {  // Tidak ada anak laki-laki
-                    if ($count_anak_pr == 1) {
-                        $porsi = 0.5;
-                        $label = "1/2";  // AN03
-                    } elseif ($count_anak_pr >= 2) {
-                        $porsi_per_orang = (2/3) / $count_anak_pr;
-                        $porsi = $porsi_per_orang;
-                        $label = "2/3 (dibagi {$count_anak_pr})";  // AN04
-                    }
-                } else {
-                    // Akan dihitung di tahap ashobah bil ghoiri
-                    $label = "Ashobah Bil Ghoiri";
-                }
-            }
-            
-            // --- ANAK LAKI-LAKI ---
-            elseif ($hub == 'anak laki-laki') {
-                // Anak laki-laki murni ashobah (tidak ada bagian tetap)
-                if ($has_anak_pr) {  // Jika ada anak perempuan
-                    $label = "Ashobah Bil Ghoiri";
-                } else {  // Hanya anak laki-laki saja
-                    $label = "Ashobah Binafsihi";
-                }
-            }
-            
-            // --- CUCU PEREMPUAN ---
-            elseif ($hub == 'cucu perempuan') {
-                if ($has_anak_lk) {
-                    $label = "Terhijab";  // CC01
-                } elseif ($has_anak) {  // Ada anak (tapi tidak laki-laki)
-                    if ($count_anak_pr == 1) {
-                        $porsi = 1/6;
-                        $label = "1/6 (Takmilah)";  // CC05
-                    } elseif ($count_anak_pr >= 2) {
-                        if ($has_cucu_lk) {
-                            $label = "Ashobah Bil Ghoiri";  // CC08
-                        } else {
-                            $label = "Terhijab";  // CC06
-                        }
-                    }
-                } else {  // Tidak ada anak sama sekali
-                    if ($count_cucu_pr == 1) {
-                        $porsi = 0.5;
-                        $label = "1/2";  // CC03
-                    } elseif ($count_cucu_pr >= 2) {
-                        // FIX: 2/3 dibagi rata ke semua cucu perempuan
-                        $porsi_per_orang = (2/3) / $count_cucu_pr;
-                        $porsi = $porsi_per_orang;
-                        $label = "2/3 (dibagi {$count_cucu_pr})";  // CC04
-                    }
-                }
-            }
-            
-            // --- CUCU LAKI-LAKI ---
-            elseif ($hub == 'cucu laki-laki') {
-                if ($has_anak_lk) {
-                    $label = "Terhijab";  // CC01
-                } elseif ($has_anak) {  // Ada anak perempuan
-                    $label = !$has_anak_lk ? "Ashobah" : "Terhijab";
-                } else {  // Tidak ada anak sama sekali
-                    $label = "Ashobah Binafsihi";  // CC02
-                }
-            }
-            
-            // --- KAKEK ---
-            elseif ($hub == 'kakek') {
-                if ($has_bapak) {
-                    $label = "Terhijab";  // KK01
-                } else {
-                    // Cek apakah hanya kakek dan saudara saja
-                    $is_only_kakek_and_siblings = (
-                        $has_kakek &&
-                        ($has_sdr_kand || $has_sdr_sebpk) &&
-                        !$has_anak && !$has_cucu &&
-                        !$has_bapak && !$has_ibu &&
-                        !$has_suami && !$has_istri
-                    );
-                    
-                    if ($is_only_kakek_and_siblings) {
-                        // Rule khusus kakek dengan saudara
-                        // Hitung semua opsi untuk kakek
-                        
-                        // Opsi 1: 1/6 + Ashobah (mendapat semua sisa)
-                        $opsi_ashobah = $total_harta;  // Mendapat semua sebagai ashobah
-                        
-                        // Opsi 2: 1/3 dari pokok harta
-                        $opsi_sepertiga = $total_harta * (1/3);
-                        
-                        // Opsi 3: Muqossamah (kakek sebagai bapak, saudara sebagai anak)
-                        $total_saudara_lk = $count_sdr_kand_lk + $count_sdr_sebpk_lk;
-                        $total_saudara_pr = $count_sdr_kand_pr + $count_sdr_sebpk_pr;
-                        $total_kepala_saudara = $total_saudara_lk * 2 + $total_saudara_pr;
-                        
-                        if ($total_kepala_saudara > 0) {
-                            $opsi_muqossamah = $total_harta * (1 / (1 + $total_kepala_saudara));
-                        } else {
-                            $opsi_muqossamah = $total_harta;
-                        }
-                        
-                        // Pilih yang paling menguntungkan untuk kakek
-                        if ($opsi_ashobah >= $opsi_sepertiga && $opsi_ashobah >= $opsi_muqossamah) {
-                            $porsi = 1/6;
-                            $label = "1/6 + Ashobah";
-                            $pilihan_kakek = 'ashobah';
-                            $bagian_kakek_terpilih = $opsi_ashobah;
-                        } elseif ($opsi_sepertiga >= $opsi_muqossamah) {
-                            $porsi = 1/3;
-                            $label = "1/3 pokok";
-                            $pilihan_kakek = 'sepertiga';
-                            $bagian_kakek_terpilih = $opsi_sepertiga;
-                        } else {
-                            $bagian_kakek_muq = 1 / (1 + $total_kepala_saudara);
-                            $porsi = $bagian_kakek_muq;
-                            $label = "Muqossamah (1:{$total_kepala_saudara})";
-                            $pilihan_kakek = 'muqossamah';
-                            $bagian_kakek_terpilih = $opsi_muqossamah;
-                        }
-                    } elseif ($has_anak_lk || $has_cucu_lk) {
-                        $porsi = 1/6;
-                        $label = "1/6";  // KK02
-                    } else {
-                        $porsi = 1/6;
-                        $label = "1/6 + Ashobah";  // KK03
-                    }
-                }
-            }
-            
-            // --- NENEK ---
-            elseif ($hub == 'nenek pihak bapak') {
-                if ($has_ibu || $has_bapak) {
-                    $label = "Terhijab";  // NE01 (implisit)
-                } else {
-                    $porsi_per_orang = ($count_nenek > 0) ? (1/6) / $count_nenek : 1/6;
-                    $porsi = $porsi_per_orang;
-                    $label = "1/6";  // NE02
-                }
-            } elseif ($hub == 'nenek pihak ibu') {
-                if ($has_ibu) {
-                    $label = "Terhijab";  // NE02
-                } else {
-                    $porsi_per_orang = ($count_nenek > 0) ? (1/6) / $count_nenek : 1/6;
-                    $porsi = $porsi_per_orang;
-                    $label = "1/6";  // NE02
-                }
-            }
-            
-            // --- SAUDARA SEIBU ---
-            elseif ($hub == 'saudara seibu') {
-                if ($has_anak || $has_cucu || $has_bapak || $has_kakek) {
-                    $label = "Terhijab";  // SB01
-                } else {
-                    if ($count_sdr_seibu == 1) {
-                        $porsi = 1/6;
-                        $label = "1/6";  // SB02
-                    } elseif ($count_sdr_seibu >= 2) {
-                        $porsi_per_orang = (1/3) / $count_sdr_seibu;
-                        $porsi = $porsi_per_orang;
-                        $label = "1/3 (dibagi {$count_sdr_seibu})";  // SB03
-                    }
-                }
-            }
-            
-            // --- SAUDARA PEREMPUAN KANDUNG ---
-            elseif ($hub == 'saudara perempuan sekandung') {
-                if ($has_anak_lk || $has_cucu_lk || $has_bapak) {
-                    $label = "Terhijab";
-                } elseif ($has_anak_pr || $has_cucu_pr) {
-                    // Ada anak/cucu perempuan tapi tidak ada laki → Ashobah Ma'al Ghoiri
-                    $label = "Ashobah Ma'al Ghoiri";
-                } elseif (!$has_anak && !$has_cucu) {
-                    if ($count_sdr_kand_pr == 1 && $count_sdr_kand_lk == 0) {
-                        $porsi = 0.5;
-                        $label = "1/2";
-                    } elseif ($count_sdr_kand_pr >= 2 && $count_sdr_kand_lk == 0) {
-                        $porsi_per_orang = (2/3) / $count_sdr_kand_pr;
-                        $porsi = $porsi_per_orang;
-                        $label = "2/3 (dibagi {$count_sdr_kand_pr})";
-                    } elseif ($count_sdr_kand_lk > 0) {
-                        // Ada saudara laki kandung → Ashobah Bil Ghoiri (ditangani di Tahap 2)
-                        $label = "Ashobah Bil Ghoiri";
-                    }
-                }
-            }
-            
-            // --- SAUDARA LAKI-LAKI KANDUNG ---
-            elseif ($hub == 'saudara laki-laki sekandung') {
-                if ($has_anak_lk || $has_cucu_lk || $has_bapak) {
-                    $label = "Terhijab";  // SK01
-                } else {
-                    $label = "Ashobah Binafsihi";  // SK05
-                }
-            }
-            
-            // --- SAUDARA SEBAPAK ---
-            elseif (in_array($hub, ['saudara perempuan sebapak', 'saudara laki-laki sebapak'])) {
-                if ($has_anak_lk || $has_cucu_lk || $has_bapak || $count_sdr_kand_lk > 0) {
-                    $label = "Terhijab";
-                } elseif ($has_kakek && !$has_bapak && !$has_anak && !$has_cucu) {
-                    $label = "Terhijab";
-                } elseif ($has_anak_pr || $has_cucu_pr) {
-                    // Ada anak/cucu perempuan tapi tidak ada laki → Ashobah Ma'al Ghoiri
-                    // Hanya berlaku untuk saudara perempuan sebapak
-                    if ($hub == 'saudara perempuan sebapak') {
-                        $label = "Ashobah Ma'al Ghoiri";
-                    } else {
-                        // Saudara laki-laki sebapak tetap terhijab oleh anak perempuan
-                        $label = "Terhijab";
-                    }
-                } else {
-                    if ($hub == 'saudara perempuan sebapak') {
-                        if ($count_sdr_sebpk_pr == 1 && $count_sdr_sebpk_lk == 0) {
-                            if ($count_sdr_kand_pr == 1) {
-                                $porsi = 1/6;
-                                $label = "1/6 (Takmilah)";
-                            } elseif ($count_sdr_kand_pr >= 2) {
-                                $label = "Terhijab";
-                            } else {
-                                $porsi = 0.5;
-                                $label = "1/2";
-                            }
-                        } elseif ($count_sdr_sebpk_pr >= 2 && $count_sdr_sebpk_lk == 0) {
-                            if ($count_sdr_kand_pr == 1) {
-                                $porsi_per_orang = (2/3 - 0.5) / $count_sdr_sebpk_pr;
-                                $porsi = $porsi_per_orang;
-                                $label = "1/6 (Takmilah, dibagi {$count_sdr_sebpk_pr})";
-                            } elseif ($count_sdr_kand_pr >= 2) {
-                                $label = "Terhijab";
-                            } else {
-                                $porsi_per_orang = (2/3) / $count_sdr_sebpk_pr;
-                                $porsi = $porsi_per_orang;
-                                $label = "2/3 (dibagi {$count_sdr_sebpk_pr})";
-                            }
-                        } elseif ($count_sdr_sebpk_lk > 0) {
-                            $label = "Ashobah Bil Ghoiri";
-                        } else {
-                            $label = "Ashobah";
-                        }
-                    } elseif ($hub == 'saudara laki-laki sebapak') {
-                        $label = "Ashobah";
-                    }
-                }
-            }
-            
-            // Simpan data sementara
+            [$porsi, $label, $pilihan_kakek] = self::tentukanPorsi($hub, $total_harta, $flags, $pilihan_kakek);
+
             if (!isset($data_sementara[$hub])) {
-                $data_sementara[$hub] = [
-                    "porsi_awal" => $porsi,
-                    "label_awal" => $label,
-                    "count" => 1
-                ];
+                $data_sementara[$hub] = ['porsi_awal' => $porsi, 'label_awal' => $label, 'count' => 1];
             } else {
-                $data_sementara[$hub]["count"]++;
+                $data_sementara[$hub]['count']++;
             }
         }
-        
-        // Konversi data sementara ke hasil_faraidh
+
         foreach ($data_sementara as $hub => $data) {
-            $count = $data["count"];
-            $porsi_per_orang = $data["porsi_awal"];
-            $label = $data["label_awal"];
-            
-            if ($porsi_per_orang > 0) {  // Ada bagian tetap
-                if (strpos($label, "dibagi") !== false) {  // Sudah porsi per orang
-                    $nominal_per_orang = $total_harta * $porsi_per_orang;
-                } else {  // Porsi total untuk semua orang dengan hubungan ini
-                    $nominal_total = $total_harta * $porsi_per_orang * $count;
-                    $nominal_per_orang = ($count > 0) ? $nominal_total / $count : 0;
+            $count = $data['count'];
+            $porsi = $data['porsi_awal'];
+            $label = $data['label_awal'];
+
+            if ($porsi > 0) {
+                if (strpos($label, 'dibagi') !== false) {
+                    $nominal_per_orang = $total_harta * $porsi;
+                } else {
+                    $nominal_per_orang = ($total_harta * $porsi) / $count;
                 }
-            } else {  // Tidak ada bagian tetap
+            } else {
                 $nominal_per_orang = 0;
             }
-            
+
             for ($i = 0; $i < $count; $i++) {
-                $hasil_faraidh[] = [
-                    "hubungan" => $hub,
-                    "label" => $label,
-                    "nominal" => $nominal_per_orang
-                ];
+                $hasil_faraidh[] = ['hubungan' => $hub, 'label' => $label, 'nominal' => $nominal_per_orang];
             }
         }
-        
-        // --- TAHAP 2: ASHOBAH ---
-        // Hitung total bagian tetap yang sudah dibagikan
-        $total_bagian_tetap = array_sum(array_column($hasil_faraidh, 'nominal'));
-        $sisa_untuk_ashobah = $total_harta - $total_bagian_tetap;
-        
-        if ($pilihan_kakek == 'ashobah') {
-            // Kakek dapat semua, saudara tidak dapat
-            foreach ($hasil_faraidh as &$r) {
-                if ($r['hubungan'] == 'kakek') {
-                    $r['nominal'] = $total_harta;
-                    $r['label'] = "1/6 + Ashobah (terpilih)";
-                } elseif (in_array($r['hubungan'], ['saudara laki-laki sekandung', 'saudara perempuan sekandung',
-                          'saudara laki-laki sebapak', 'saudara perempuan sebapak'])) {
-                    $r['nominal'] = 0;
-                    if ($r['label'] != "Terhijab") {
-                        $r['label'] = "Terhijab oleh kakek";
-                    }
-                }
-            }
-            // Set sisa untuk ashobah = 0 karena sudah habis
-            $sisa_untuk_ashobah = 0;
-        } elseif ($pilihan_kakek == 'sepertiga') {
-            // Kakek dapat 1/3, sisa untuk saudara (ashobah)
-            $bagian_kakek = $total_harta * (1/3);
-            $sisa_untuk_saudara = $total_harta - $bagian_kakek;
-            
-            foreach ($hasil_faraidh as &$r) {
-                if ($r['hubungan'] == 'kakek') {
-                    $r['nominal'] = $bagian_kakek;
-                    $r['label'] = "1/3 pokok (terpilih)";
-                }
-            }
-            
-            // Bagikan sisa ke saudara
-            $total_saudara_lk = $count_sdr_kand_lk + $count_sdr_sebpk_lk;
-            $total_saudara_pr = $count_sdr_kand_pr + $count_sdr_sebpk_pr;
-            
-            if ($total_saudara_lk > 0) {
-                if ($total_saudara_pr > 0) {
-                    // Ashobah bil ghoiri
-                    $total_kepala = $total_saudara_lk * 2 + $total_saudara_pr;
-                    $nilai_per_kepala = ($total_kepala > 0) ? $sisa_untuk_saudara / $total_kepala : 0;
-                    
-                    foreach ($hasil_faraidh as &$r) {
-                        if (strpos($r['hubungan'], 'saudara laki-laki') !== false && 
-                            (strpos($r['hubungan'], 'sekandung') !== false || strpos($r['hubungan'], 'sebapak') !== false)) {
-                            $r['nominal'] += $nilai_per_kepala * 2;
-                            $r['label'] = "Ashobah Bil Ghoiri (2 bagian)";
-                        } elseif (strpos($r['hubungan'], 'saudara perempuan') !== false && 
-                                 (strpos($r['hubungan'], 'sekandung') !== false || strpos($r['hubungan'], 'sebapak') !== false)) {
-                            $r['nominal'] += $nilai_per_kepala * 1;
-                            $r['label'] = "Ashobah Bil Ghoiri (1 bagian)";
-                        }
-                    }
+
+        return [$hasil_faraidh, $pilihan_kakek];
+    }
+
+    // =========================================================
+    // HELPER: TENTUKAN PORSI PER AHLI WARIS
+    // =========================================================
+
+    private static function tentukanPorsi($hub, $total_harta, $flags, $pilihan_kakek)
+    {
+        $f = $flags;
+        $c = $flags['count'];
+        $porsi = 0.0;
+        $label = "";
+
+        switch (true) {
+
+            case $hub === 'suami':
+                $porsi = ($f['has_anak'] || $f['has_cucu']) ? 0.25 : 0.5;
+                $label = ($f['has_anak'] || $f['has_cucu']) ? "1/4" : "1/2";
+                break;
+
+            case $hub === 'istri':
+                if ($f['has_anak'] || $f['has_cucu']) {
+                    $porsi = 0.125;
+                    $label = $c['istri'] > 1 ? "1/8 (dibagi {$c['istri']})" : "1/8";
                 } else {
-                    // Ashobah binafsihi untuk saudara laki-laki
-                    $nilai_per_orang = ($total_saudara_lk > 0) ? $sisa_untuk_saudara / $total_saudara_lk : 0;
-                    foreach ($hasil_faraidh as &$r) {
-                        if (strpos($r['hubungan'], 'saudara laki-laki') !== false && 
-                            (strpos($r['hubungan'], 'sekandung') !== false || strpos($r['hubungan'], 'sebapak') !== false)) {
-                            $r['nominal'] += $nilai_per_orang;
-                            $r['label'] = "Ashobah Binafsihi";
-                        }
-                    }
+                    $porsi = 0.25;
+                    $label = $c['istri'] > 1 ? "1/4 (dibagi {$c['istri']})" : "1/4";
                 }
-            } elseif ($total_saudara_pr > 0) {
-                // Hanya saudara perempuan
-                $nilai_per_orang = ($total_saudara_pr > 0) ? $sisa_untuk_saudara / $total_saudara_pr : 0;
-                foreach ($hasil_faraidh as &$r) {
-                    if (strpos($r['hubungan'], 'saudara perempuan') !== false && 
-                        (strpos($r['hubungan'], 'sekandung') !== false || strpos($r['hubungan'], 'sebapak') !== false)) {
-                        $r['nominal'] += $nilai_per_orang;
-                        $r['label'] = "Ashobah";
-                    }
+                break;
+
+            case $hub === 'ibu':
+                $total_saudara = $c['sdr_kand_lk'] + $c['sdr_kand_pr']
+                               + $c['sdr_sebpk_lk'] + $c['sdr_sebpk_pr']
+                               + $c['sdr_seibu'];
+                if ($f['has_anak'] || $f['has_cucu'] || $total_saudara >= 2) {
+                    $porsi = 1/6; $label = "1/6";
+                } elseif ($f['has_bapak'] && ($f['has_suami'] || $f['has_istri'])) {
+                    $bagian_pasangan = $f['has_suami'] ? 0.5 : 0.25;
+                    $porsi = (1 - $bagian_pasangan) / 3;
+                    $label = "1/3 sisa (Gharawain)";
+                } else {
+                    $porsi = 1/3; $label = "1/3";
+                }
+                break;
+
+            case $hub === 'bapak':
+                $porsi = 1/6;
+                $label = ($f['has_anak_lk'] || $f['has_cucu_lk']) ? "1/6" : "1/6 + Ashobah Binafsihi";
+                break;
+
+            case $hub === 'anak laki-laki':
+                $label = $f['has_anak_pr'] ? "Ashobah Bil Ghoiri" : "Ashobah Binafsihi";
+                break;
+
+            case $hub === 'anak perempuan':
+                if ($f['has_anak_lk']) {
+                    $label = "Ashobah Bil Ghoiri";
+                } elseif ($c['anak_pr'] === 1) {
+                    $porsi = 0.5; $label = "1/2";
+                } else {
+                    $porsi = (2/3) / $c['anak_pr'];
+                    $label = "2/3 (dibagi {$c['anak_pr']})";
+                }
+                break;
+
+            case $hub === 'cucu laki-laki':
+                if ($f['has_anak_lk']) {
+                    $label = "Terhijab";
+                } elseif ($f['has_anak']) {
+                    $label = "Ashobah";
+                } else {
+                    $label = "Ashobah Binafsihi";
+                }
+                break;
+
+            case $hub === 'cucu perempuan':
+                [$porsi, $label] = self::tentukanPorsiCucuPerempuan($c, $f);
+                break;
+
+            case $hub === 'kakek':
+                [$porsi, $label, $pilihan_kakek] = self::tentukanPorsiKakek($total_harta, $c, $f, $pilihan_kakek);
+                break;
+
+            case $hub === 'nenek pihak bapak':
+                if ($f['has_ibu'] || $f['has_bapak']) {
+                    $label = "Terhijab";
+                } else {
+                    $total_nenek_aktif = $c['nenek_bapak'] + $c['nenek_ibu'];
+                    $porsi = (1/6) / max($total_nenek_aktif, 1);
+                    $label = $total_nenek_aktif > 1 ? "1/6 (dibagi {$total_nenek_aktif})" : "1/6";
+                }
+                break;
+
+            case $hub === 'nenek pihak ibu':
+                if ($f['has_ibu']) {
+                    $label = "Terhijab";
+                } else {
+                    $total_nenek_aktif = $c['nenek_ibu'] + ($f['has_bapak'] ? 0 : $c['nenek_bapak']);
+                    $porsi = (1/6) / max($total_nenek_aktif, 1);
+                    $label = $total_nenek_aktif > 1 ? "1/6 (dibagi {$total_nenek_aktif})" : "1/6";
+                }
+                break;
+
+            case $hub === 'saudara seibu':
+                if ($f['has_anak'] || $f['has_cucu'] || $f['has_bapak'] || $f['has_kakek']) {
+                    $label = "Terhijab";
+                } elseif ($f['is_musytarakah']) {
+                    $total_peserta = $c['sdr_seibu'] + $c['sdr_kand_lk'] + $c['sdr_kand_pr'];
+                    $porsi = (1/3) / $total_peserta;
+                    $label = "Musytarakah (1/3 dibagi {$total_peserta})";
+                } elseif ($c['sdr_seibu'] === 1) {
+                    $porsi = 1/6; $label = "1/6";
+                } else {
+                    $porsi = (1/3) / $c['sdr_seibu'];
+                    $label = "1/3 (dibagi {$c['sdr_seibu']})";
+                }
+                break;
+
+            case $hub === 'saudara laki-laki sekandung':
+                if ($f['has_anak_lk'] || $f['has_cucu_lk'] || $f['has_bapak']) {
+                    $label = "Terhijab";
+                } elseif ($f['has_kakek']) {
+                    $label = "Ashobah (bersama Kakek)";
+                } elseif ($f['is_musytarakah']) {
+                    $total_peserta = $c['sdr_seibu'] + $c['sdr_kand_lk'] + $c['sdr_kand_pr'];
+                    $porsi = (1/3) / $total_peserta;
+                    $label = "Musytarakah (1/3 dibagi {$total_peserta})";
+                } else {
+                    $label = "Ashobah Binafsihi";
+                }
+                break;
+
+            case $hub === 'saudara perempuan sekandung':
+                if ($f['has_anak_lk'] || $f['has_cucu_lk'] || $f['has_bapak']) {
+                    $label = "Terhijab";
+                } elseif ($f['has_kakek']) {
+                    $label = "Ashobah (bersama Kakek)";
+                } elseif ($f['is_musytarakah']) {
+                    $total_peserta = $c['sdr_seibu'] + $c['sdr_kand_lk'] + $c['sdr_kand_pr'];
+                    $porsi = (1/3) / $total_peserta;
+                    $label = "Musytarakah (1/3 dibagi {$total_peserta})";
+                } else {
+                    [$porsi, $label] = self::tentukanPorsiSdrPrKandung($c, $f);
+                }
+                break;
+
+            case $hub === 'saudara laki-laki sebapak':
+                if ($f['has_anak_lk'] || $f['has_cucu_lk'] || $f['has_bapak'] || $c['sdr_kand_lk'] > 0) {
+                    $label = "Terhijab";
+                } elseif ($f['has_kakek']) {
+                    // Saudara sebapak ikut muaddah bersama kakek, hasilnya dihandle di ashobah
+                    $label = "Ashobah (bersama Kakek)";
+                } elseif ($c['sdr_kand_pr'] > 0 && ($f['has_anak_pr'] || $f['has_cucu_pr'])) {
+                    $label = "Terhijab";
+                } else {
+                    $label = $c['sdr_sebpk_pr'] > 0 ? "Ashobah Bil Ghoiri" : "Ashobah Binafsihi";
+                }
+                break;
+
+            case $hub === 'saudara perempuan sebapak':
+                [$porsi, $label] = self::tentukanPorsiSdrPrSebapak($c, $f);
+                break;
+        }
+
+        return [$porsi, $label, $pilihan_kakek];
+    }
+
+    // =========================================================
+    // HELPER: PORSI CUCU PEREMPUAN
+    // =========================================================
+
+    private static function tentukanPorsiCucuPerempuan($c, $f)
+    {
+        if ($f['has_anak_lk']) {
+            return [0.0, "Terhijab"];
+        } elseif ($f['has_anak']) {
+            if ($c['anak_pr'] === 1) {
+                return [1/6, "1/6 (Takmilah)"];
+            } elseif ($c['anak_pr'] >= 2) {
+                return [0.0, $f['has_cucu_lk'] ? "Ashobah Bil Ghoiri" : "Terhijab"];
+            }
+        } else {
+            if ($f['has_cucu_lk']) {
+                return [0.0, "Ashobah Bil Ghoiri"];
+            } elseif ($c['cucu_pr'] === 1) {
+                return [0.5, "1/2"];
+            } else {
+                return [(2/3) / $c['cucu_pr'], "2/3 (dibagi {$c['cucu_pr']})"];
+            }
+        }
+        return [0.0, ""];
+    }
+
+    // =========================================================
+    // HELPER: PORSI KAKEK
+    // =========================================================
+
+    private static function tentukanPorsiKakek($total_harta, $c, $f, $pilihan_kakek)
+    {
+        // 1. Mahjub oleh Bapak
+        if ($f['has_bapak']) {
+            return [0.0, "Terhijab", $pilihan_kakek];
+        }
+
+        // 2. Akdariyah (dihandle terpisah)
+        if ($f['is_akdariyah']) {
+            return [0.0, "Akdariyah (dihandle terpisah)", $pilihan_kakek];
+        }
+
+        // 3. Ada Anak Laki-laki atau Cucu Laki-laki → 1/6 tetap
+        if ($f['has_anak_lk'] || $f['has_cucu_lk']) {
+            return [1/6, "1/6", $pilihan_kakek];
+        }
+
+        // 4. Ada Anak Perempuan (tanpa anak laki-laki) → 1/6 tetap
+        if ($f['has_anak_pr'] && !$f['has_anak_lk']) {
+            return [1/6, "1/6", $pilihan_kakek];
+        }
+
+        $ada_saudara = ($c['sdr_kand_lk'] + $c['sdr_kand_pr'] +
+                        $c['sdr_sebpk_lk'] + $c['sdr_sebpk_pr']) > 0;
+        // Catatan: sdr_seibu tidak dihitung (mahjub oleh kakek)
+
+        // 5. Kakek tanpa saudara (asobah murni)
+        if (!$ada_saudara) {
+            return [1/6, "1/6 + Ashobah Binafsihi", $pilihan_kakek];
+        }
+
+        // 6. Kakek bersama saudara: tentukan apakah ada ahli waris lain
+        $ada_ahli_waris_lain = (
+            $f['has_ibu'] || $f['has_suami'] || $f['has_istri'] ||
+            $f['has_cucu_pr'] || $c['sdr_seibu'] > 0
+        );
+
+        if (!$ada_ahli_waris_lain) {
+            // ======================================================
+            // KAKEK + SAUDARA SAJA (tanpa ahli waris lain)
+            // Pilih: Muqosamah vs 1/3
+            // ======================================================
+            $total_bagian_saudara = self::hitungTotalKepalaMuaddah($c);
+
+            if ($total_bagian_saudara < 4) {
+                $total_kepala = 2 + $total_bagian_saudara;
+                $porsi = 2 / $total_kepala;
+                return [$porsi, "Muqosamah (terpilih)", 'muqosamah_solo'];
+            } elseif ($total_bagian_saudara == 4) {
+                return [1/3, "1/3 (sama dengan Muqosamah)", 'sepertiga_solo'];
+            } else {
+                return [1/3, "1/3 (terpilih)", 'sepertiga_solo'];
+            }
+        }
+
+        // 7. Kakek + saudara + ahli waris lain → dihandle di hitungAshobahKakek
+        return [1/6, "1/6 + Ashobah (sementara)", 'with_others'];
+    }
+
+    // =========================================================
+    // HELPER: HITUNG TOTAL KEPALA MUADDAH
+    // Menghitung total bagian saudara yang ikut dihitung bersama kakek
+    // Logika muaddah: saudari sebapak ikut dihitung jika saudara kandung < 4 bagian
+    // KECUALI jika kasus 1 saudari kandung + ada saudara sebapak
+    // (kasus ini saudara sebapak tetap ikut muqosamah namun setelah itu dihandle khusus)
+    // =========================================================
+
+    private static function hitungTotalKepalaMuaddah($c)
+    {
+        $kepala_kand  = ($c['sdr_kand_lk'] * 2) + $c['sdr_kand_pr'];
+        $kepala_sebpk = ($c['sdr_sebpk_lk'] * 2) + $c['sdr_sebpk_pr'];
+        $ada_sebpk    = ($c['sdr_sebpk_lk'] + $c['sdr_sebpk_pr']) > 0;
+
+        // Jika tidak ada saudara sebapak, hanya hitung kandung
+        if (!$ada_sebpk) {
+            return $kepala_kand;
+        }
+
+        // Jika saudara kandung sudah >= 4 bagian, tidak perlu muaddah
+        if ($kepala_kand >= 4) {
+            return $kepala_kand;
+        }
+
+        // Muaddah berlaku: tambahkan sebapak (sampai batas 4 atau habis)
+        // Namun dalam praktiknya kita hitung semua yang ada
+        return $kepala_kand + $kepala_sebpk;
+    }
+
+    // =========================================================
+    // HELPER: PORSI SAUDARA PEREMPUAN KANDUNG
+    // =========================================================
+
+    private static function tentukanPorsiSdrPrKandung($c, $f)
+    {
+        if ($f['has_anak_lk'] || $f['has_cucu_lk'] || $f['has_bapak']) {
+            return [0.0, "Terhijab"];
+        }
+        if ($f['has_kakek']) {
+            return [0.0, "Ashobah (bersama Kakek)"];
+        }
+        if ($f['has_anak_pr'] || $f['has_cucu_pr']) {
+            if ($c['anak_pr'] >= 2) {
+                return [0.0, "Terhijab"];
+            }
+            return [0.0, "Ashobah Ma'al Ghoiri"];
+        }
+        if (!$f['has_anak'] && !$f['has_cucu']) {
+            if ($c['sdr_kand_lk'] > 0) {
+                return [0.0, "Ashobah Bil Ghoiri"];
+            } elseif ($c['sdr_kand_pr'] === 1) {
+                return [0.5, "1/2"];
+            } else {
+                return [(2/3) / $c['sdr_kand_pr'], "2/3 (dibagi {$c['sdr_kand_pr']})"];
+            }
+        }
+        return [0.0, ""];
+    }
+
+    // =========================================================
+    // HELPER: PORSI SAUDARA PEREMPUAN SEBAPAK
+    // =========================================================
+
+    private static function tentukanPorsiSdrPrSebapak($c, $f)
+    {
+        if ($f['has_anak_lk'] || $f['has_cucu_lk'] || $f['has_bapak'] || $c['sdr_kand_lk'] > 0) {
+            return [0.0, "Terhijab"];
+        }
+        if ($f['has_kakek']) {
+            return [0.0, "Ashobah (bersama Kakek)"];
+        }
+        if ($c['sdr_kand_pr'] > 0 && ($f['has_anak_pr'] || $f['has_cucu_pr'])) {
+            return [0.0, "Terhijab"];
+        }
+        if ($f['has_anak_pr'] || $f['has_cucu_pr']) {
+            return [0.0, $c['anak_pr'] >= 2 ? "Terhijab" : "Ashobah Ma'al Ghoiri"];
+        }
+        if ($c['sdr_sebpk_lk'] > 0) {
+            return [0.0, "Ashobah Bil Ghoiri"];
+        }
+        if ($c['sdr_sebpk_pr'] === 1) {
+            if ($c['sdr_kand_pr'] === 1) {
+                return [1/6, "1/6 (Takmilah)"];
+            } elseif ($c['sdr_kand_pr'] >= 2) {
+                return [0.0, "Terhijab"];
+            }
+            return [0.5, "1/2"];
+        }
+        if ($c['sdr_sebpk_pr'] >= 2) {
+            if ($c['sdr_kand_pr'] === 1) {
+                return [(2/3 - 0.5) / $c['sdr_sebpk_pr'], "1/6 (Takmilah, dibagi {$c['sdr_sebpk_pr']})"];
+            } elseif ($c['sdr_kand_pr'] >= 2) {
+                return [0.0, "Terhijab"];
+            }
+            return [(2/3) / $c['sdr_sebpk_pr'], "2/3 (dibagi {$c['sdr_sebpk_pr']})"];
+        }
+        return [0.0, "Ashobah Binafsihi"];
+    }
+
+    // =========================================================
+    // TAHAP 2: ASHOBAH
+    // =========================================================
+
+    private static function hitungAshobah($total_harta, $hasil_faraidh, $flags, $pilihan_kakek)
+    {
+        $f = $flags;
+        $c = $flags['count'];
+        $total_bagian_tetap = array_sum(array_column($hasil_faraidh, 'nominal'));
+        $sisa = $total_harta - $total_bagian_tetap;
+
+        // === KAKEK (semua kasus) ===
+        if ($pilihan_kakek) {
+            return self::hitungAshobahKakek($total_harta, $hasil_faraidh, $c, $f, $pilihan_kakek);
+        }
+
+        // === ANAK LAKI-LAKI ===
+        if ($f['has_anak_lk'] && $sisa > 0) {
+            return self::bagikanAshobahBilGhoiriAtauBinafsihi(
+                $hasil_faraidh, $sisa, 'anak laki-laki', 'anak perempuan', $c['anak_lk'], $c['anak_pr']
+            );
+        }
+
+        // === CUCU LAKI-LAKI (jika tidak ada anak lk) ===
+        if (!$f['has_anak_lk'] && $f['has_cucu_lk'] && $sisa > 0) {
+            return self::bagikanAshobahBilGhoiriAtauBinafsihi(
+                $hasil_faraidh, $sisa, 'cucu laki-laki', 'cucu perempuan', $c['cucu_lk'], $c['cucu_pr']
+            );
+        }
+
+        // === BAPAK ===
+        if ($f['has_bapak'] && $sisa > 0) {
+            foreach ($hasil_faraidh as &$res) {
+                if ($res['hubungan'] === 'bapak') {
+                    $res['nominal'] += $sisa;
+                    $res['label']   = "1/6 + Ashobah Binafsihi";
+                    break;
                 }
             }
-            // Set sisa untuk ashobah = 0 karena sudah habis
-            $sisa_untuk_ashobah = 0;
-        } elseif ($pilihan_kakek == 'muqossamah') {
-            // Muqossamah: kakek 1 bagian, saudara sebagai anak
-            $total_saudara_lk = $count_sdr_kand_lk + $count_sdr_sebpk_lk;
-            $total_saudara_pr = $count_sdr_kand_pr + $count_sdr_sebpk_pr;
-            $total_kepala_saudara = $total_saudara_lk * 2 + $total_saudara_pr;
-            
-            if ($total_kepala_saudara > 0) {
-                $bagian_kakek = $total_harta * (1 / (1 + $total_kepala_saudara));
-                $sisa_untuk_saudara = $total_harta - $bagian_kakek;
-                
-                foreach ($hasil_faraidh as &$r) {
-                    if ($r['hubungan'] == 'kakek') {
-                        $r['nominal'] = $bagian_kakek;
-                        $r['label'] = "Muqossamah (1:{$total_kepala_saudara}, terpilih)";
-                    }
+            return $hasil_faraidh;
+        }
+
+        // === KAKEK ASOBAH MURNI (tanpa saudara) ===
+        if ($f['has_kakek'] && !$f['has_bapak'] && !$f['has_sdr_kand'] && !$f['has_sdr_sebpk'] && $sisa > 0) {
+            foreach ($hasil_faraidh as &$res) {
+                if ($res['hubungan'] === 'kakek') {
+                    $res['nominal'] += $sisa;
+                    $res['label']    = "1/6 + Ashobah";
+                    break;
                 }
-                
-                // Bagikan ke saudara berdasarkan kepala
-                $nilai_per_kepala = ($total_kepala_saudara > 0) ? $sisa_untuk_saudara / $total_kepala_saudara : 0;
-                
+            }
+            return $hasil_faraidh;
+        }
+
+        // === SAUDARA KANDUNG ===
+        if ($f['has_sdr_kand'] && !$f['has_kakek']
+            && !($f['has_anak_lk'] || $f['has_cucu_lk'] || $f['has_bapak'])
+            && $sisa > 0) {
+            if ($c['sdr_kand_lk'] > 0) {
+                return self::bagikanAshobahBilGhoiriAtauBinafsihi(
+                    $hasil_faraidh, $sisa,
+                    'saudara laki-laki sekandung', 'saudara perempuan sekandung',
+                    $c['sdr_kand_lk'], $c['sdr_kand_pr']
+                );
+            }
+        }
+
+        // === SAUDARA SEBAPAK ===
+        $sdr_kand_pr_ashobah_maal = false;
+        foreach ($hasil_faraidh as $r) {
+            if ($r['hubungan'] === 'saudara perempuan sekandung' && $r['label'] === "Ashobah Ma'al Ghoiri") {
+                $sdr_kand_pr_ashobah_maal = true;
+                break;
+            }
+        }
+
+        if ($f['has_sdr_sebpk'] && !$f['has_kakek']
+            && !($f['has_anak_lk'] || $f['has_cucu_lk'] || $f['has_bapak'])
+            && $c['sdr_kand_lk'] === 0 && !$sdr_kand_pr_ashobah_maal
+            && $sisa > 0) {
+            if ($c['sdr_sebpk_lk'] > 0) {
+                return self::bagikanAshobahBilGhoiriAtauBinafsihi(
+                    $hasil_faraidh, $sisa,
+                    'saudara laki-laki sebapak', 'saudara perempuan sebapak',
+                    $c['sdr_sebpk_lk'], $c['sdr_sebpk_pr']
+                );
+            }
+        }
+
+        return $hasil_faraidh;
+    }
+
+    // =========================================================
+    // HELPER: ASHOBAH KAKEK (semua kasus kakek + saudara)
+    // =========================================================
+
+    private static function hitungAshobahKakek($total_harta, $hasil_faraidh, $c, $f, $pilihan_kakek)
+    {
+        // ============================================================
+        // KASUS SOLO: Kakek + saudara SAJA (tanpa ahli waris lain)
+        // Porsi sudah dihitung di tentukanPorsiKakek, tinggal bagikan sisa
+        // ============================================================
+        if ($pilihan_kakek === 'muqosamah_solo' || $pilihan_kakek === 'sepertiga_solo') {
+            // Bagian kakek sudah ada di hasil_faraidh (dihitung dari porsi)
+            $bagian_kakek = 0;
+            foreach ($hasil_faraidh as $r) {
+                if ($r['hubungan'] === 'kakek') {
+                    $bagian_kakek = $r['nominal'];
+                    break;
+                }
+            }
+            $sisa_untuk_sdr = $total_harta - $bagian_kakek;
+            return self::bagikanSisaSetelahKakek($hasil_faraidh, $sisa_untuk_sdr, $total_harta, $c, true);
+        }
+
+        // ============================================================
+        // KASUS WITH_OTHERS: Kakek + saudara + ahli waris lain
+        // Hitung ulang bagian kakek dari 3 pilihan, lalu bagikan sisa
+        // ============================================================
+        if ($pilihan_kakek === 'with_others') {
+            // Hitung total furud (selain kakek dan saudara)
+            $nominal_furud = 0;
+            foreach ($hasil_faraidh as $r) {
+                if ($r['hubungan'] === 'kakek') continue;
+                if (self::isSaudara($r['hubungan'])) continue;
+                if ($r['label'] === 'Terhijab') continue;
+                if ($r['nominal'] > 0) $nominal_furud += $r['nominal'];
+            }
+
+            $sisa_setelah_furud = $total_harta - $nominal_furud;
+
+            // Hitung total kepala saudara untuk muqosamah (dengan muaddah)
+            $total_kepala_muaddah = self::hitungTotalKepalaMuaddah($c);
+
+            // Opsi 1: Muqosamah
+            $opsi_muqosamah = ($total_kepala_muaddah > 0)
+                ? $sisa_setelah_furud * (2 / (2 + $total_kepala_muaddah))
+                : $sisa_setelah_furud;
+
+            // Opsi 2: 1/3 dari sisa
+            $opsi_sepertiga_sisa = $sisa_setelah_furud / 3;
+
+            // Opsi 3: 1/6 dari total harta (minimal)
+            $opsi_seperenam = $total_harta / 6;
+
+            $bagian_kakek = max($opsi_muqosamah, $opsi_sepertiga_sisa, $opsi_seperenam);
+
+            // Tentukan label
+            $sama_muqosamah    = abs($bagian_kakek - $opsi_muqosamah) < 0.01;
+            $sama_sepertiga    = abs($bagian_kakek - $opsi_sepertiga_sisa) < 0.01;
+            $lebih_dari_seperenam = $bagian_kakek > $opsi_seperenam + 0.01;
+
+            if ($sama_muqosamah && $sama_sepertiga && $lebih_dari_seperenam) {
+                $label_kakek = "Muqosamah = 1/3 sisa (terpilih)";
+            } elseif ($sama_muqosamah && $lebih_dari_seperenam) {
+                $label_kakek = "Muqosamah (terpilih)";
+            } elseif ($sama_sepertiga && $lebih_dari_seperenam) {
+                $label_kakek = "1/3 sisa (terpilih)";
+            } else {
+                $label_kakek = "1/6 (minimal)";
+            }
+
+            // Terapkan bagian kakek
+            foreach ($hasil_faraidh as &$r) {
+                if ($r['hubungan'] === 'kakek') {
+                    $r['nominal'] = $bagian_kakek;
+                    $r['label']   = $label_kakek;
+                    break;
+                }
+            }
+            unset($r);
+
+            $sisa_untuk_sdr = $sisa_setelah_furud - $bagian_kakek;
+
+            if ($sisa_untuk_sdr > 0.01) {
+                $hasil_faraidh = self::bagikanSisaSetelahKakek(
+                    $hasil_faraidh, $sisa_untuk_sdr, $total_harta, $c, false
+                );
+            }
+
+            return $hasil_faraidh;
+        }
+
+        return $hasil_faraidh;
+    }
+
+    // =========================================================
+    // HELPER: BAGIKAN SISA SETELAH KAKEK DAPAT BAGIANNYA
+    // =========================================================
+
+    private static function bagikanSisaSetelahKakek($hasil_faraidh, $sisa_untuk_sdr, $total_harta, $c, $is_solo)
+    {
+        if ($sisa_untuk_sdr <= 0.01) {
+            // Tandai semua saudara sebagai terhijab jika sisa habis
+            foreach ($hasil_faraidh as &$r) {
+                if (self::isSaudara($r['hubungan']) && $r['nominal'] == 0) {
+                    $r['label'] = "Terhijab (sisa habis)";
+                }
+            }
+            return $hasil_faraidh;
+        }
+
+        // ============================================================
+        // KASUS KHUSUS: 1 saudari kandung + ada saudara/i sebapak
+        // Saudara sebapak sudah ikut muqosamah (muaddah), tapi setelah
+        // kakek dapat bagian, saudari kandung dicek vs batas 1/2 harta
+        // ============================================================
+        $kasus_satu_sdri_kand_plus_sebpak = (
+            $c['sdr_kand_lk'] === 0 &&
+            $c['sdr_kand_pr'] === 1 &&
+            ($c['sdr_sebpk_lk'] + $c['sdr_sebpk_pr']) > 0
+        );
+
+        if ($kasus_satu_sdri_kand_plus_sebpak) {
+            $batas_setengah = $total_harta * 0.5;
+
+            if ($sisa_untuk_sdr <= $batas_setengah + 0.01) {
+                // Sisa ≤ 1/2 total harta → seluruh sisa untuk saudari kandung
                 foreach ($hasil_faraidh as &$r) {
-                    if (strpos($r['hubungan'], 'saudara laki-laki') !== false && 
-                        (strpos($r['hubungan'], 'sekandung') !== false || strpos($r['hubungan'], 'sebapak') !== false)) {
-                        $r['nominal'] += $nilai_per_kepala * 2;
-                        $r['label'] = "Muqossamah (2 bagian, 1:{$total_kepala_saudara})";
-                    } elseif (strpos($r['hubungan'], 'saudara perempuan') !== false && 
-                             (strpos($r['hubungan'], 'sekandung') !== false || strpos($r['hubungan'], 'sebapak') !== false)) {
-                        $r['nominal'] += $nilai_per_kepala * 1;
-                        $r['label'] = "Muqossamah (1 bagian, 1:{$total_kepala_saudara})";
+                    if ($r['hubungan'] === 'saudara perempuan sekandung') {
+                        $r['nominal'] += $sisa_untuk_sdr;
+                        $r['label']    = "Ashobah (seluruh sisa)";
+                    }
+                    if (self::isSaudara($r['hubungan']) && str_contains($r['hubungan'], 'sebapak')) {
+                        $r['nominal'] = 0;
+                        $r['label']   = "Ashobah habis (diambil saudari kandung)";
                     }
                 }
             } else {
-                // Tidak ada saudara, kakek dapat semua
+                // Sisa > 1/2 total harta → saudari kandung ambil 1/2, lebih untuk sebapak
+                $bagian_sdri_kand  = $batas_setengah;
+                $lebih_untuk_sebpk = $sisa_untuk_sdr - $bagian_sdri_kand;
+                $total_kepala_sebpk = ($c['sdr_sebpk_lk'] * 2) + $c['sdr_sebpk_pr'];
+                $nilai_per_kepala   = $total_kepala_sebpk > 0 ? $lebih_untuk_sebpk / $total_kepala_sebpk : 0;
+
                 foreach ($hasil_faraidh as &$r) {
-                    if ($r['hubungan'] == 'kakek') {
-                        $r['nominal'] = $total_harta;
-                        $r['label'] = "1/6 + Ashobah";
+                    if ($r['hubungan'] === 'saudara perempuan sekandung') {
+                        $r['nominal'] += $bagian_sdri_kand;
+                        $r['label']    = "1/2 dari total harta";
+                    } elseif (self::isSaudaraLaki($r['hubungan']) && str_contains($r['hubungan'], 'sebapak')) {
+                        $r['nominal'] += $nilai_per_kepala * 2;
+                        $r['label']    = "Ashobah Bil Ghoiri (sisa kakek)";
+                    } elseif (self::isSaudaraPerempuan($r['hubungan']) && str_contains($r['hubungan'], 'sebapak')) {
+                        $r['nominal'] += $nilai_per_kepala * 1;
+                        $r['label']    = "Ashobah Bil Ghoiri (sisa kakek)";
                     }
                 }
             }
-            // Set sisa untuk ashobah = 0 karena sudah habis
-            $sisa_untuk_ashobah = 0;
-        }
-        
-        // Prioritas ashobah berdasarkan hirarki:
-        // 1. Anak laki-laki (dengan anak perempuan bil ghoiri)
-        // 2. Cucu laki-laki (jika tidak ada anak)
-        // 3. Bapak (jika tidak ada anak/cucu laki)
-        // 4. Kakek (jika tidak ada bapak)
-        // 5. Saudara kandung
-        // 6. Saudara sebapak
-        
-        // 1. ANAK LAKI-LAKI & PEREMPUAN (Ashobah Bil Ghoiri atau Binafsihi)
-        if ($has_anak_lk && $sisa_untuk_ashobah > 0) {
-            if ($has_anak_pr) {  // Ada anak perempuan (Ashobah Bil Ghoiri)
-                $total_kepala = ($count_anak_lk * 2) + $count_anak_pr;
-                $nilai_per_kepala = ($total_kepala > 0) ? $sisa_untuk_ashobah / $total_kepala : 0;
-                
-                // Update anak laki-laki
-                foreach ($hasil_faraidh as &$res) {
-                    if ($res['hubungan'] == 'anak laki-laki') {
-                        $res['nominal'] += $nilai_per_kepala * 2;
-                        $res['label'] = "Ashobah Bil Ghoiri (2 bagian)";
-                    }
-                }
-                
-                // Update anak perempuan
-                foreach ($hasil_faraidh as &$res) {
-                    if ($res['hubungan'] == 'anak perempuan') {
-                        $res['nominal'] += $nilai_per_kepala * 1;
-                        $res['label'] = "Ashobah Bil Ghoiri (1 bagian)";
-                    }
-                }
-            } else {  // Hanya anak laki-laki saja (Ashobah Binafsihi)
-                $nilai_per_orang = ($count_anak_lk > 0) ? $sisa_untuk_ashobah / $count_anak_lk : 0;
-                
-                // Update semua anak laki-laki
-                foreach ($hasil_faraidh as &$res) {
-                    if ($res['hubungan'] == 'anak laki-laki') {
-                        $res['nominal'] += $nilai_per_orang;
-                        $res['label'] = "Ashobah Binafsihi";
-                    }
-                }
-            }
-            $sisa_untuk_ashobah = 0;
-        }
-        
-        // 2. CUCU LAKI-LAKI & PEREMPUAN (jika tidak ada anak)
-        elseif (!$has_anak && $has_cucu_lk && $sisa_untuk_ashobah > 0) {
-            if ($has_cucu_pr) {  // Ada cucu perempuan
-                $total_kepala = ($count_cucu_lk * 2) + $count_cucu_pr;
-                $nilai_per_kepala = ($total_kepala > 0) ? $sisa_untuk_ashobah / $total_kepala : 0;
-                
-                foreach ($hasil_faraidh as &$res) {
-                    if ($res['hubungan'] == 'cucu laki-laki') {
-                        $res['nominal'] += $nilai_per_kepala * 2;
-                        $res['label'] = "Ashobah Bil Ghoiri (2 bagian)";
-                    } elseif ($res['hubungan'] == 'cucu perempuan') {
-                        $res['nominal'] += $nilai_per_kepala * 1;
-                        $res['label'] = "Ashobah Bil Ghoiri (1 bagian)";
-                    }
-                }
-            } else {  // Hanya cucu laki-laki saja
-                $nilai_per_orang = ($count_cucu_lk > 0) ? $sisa_untuk_ashobah / $count_cucu_lk : 0;
-                
-                foreach ($hasil_faraidh as &$res) {
-                    if ($res['hubungan'] == 'cucu laki-laki') {
-                        $res['nominal'] += $nilai_per_orang;
-                        $res['label'] = "Ashobah Binafsihi";
-                    }
-                }
-            }
-            $sisa_untuk_ashobah = 0;
-        }
-        
-        // 3. BAPAK (1/6 + Ashobah)
-        elseif ($has_bapak && $sisa_untuk_ashobah > 0) {
-            // 1/6 bapak sudah dihitung di Tahap 1
-            foreach ($hasil_faraidh as &$res) {
-                if ($res['hubungan'] == 'bapak') {
-                    $res['nominal'] += $sisa_untuk_ashobah;
-                    $res['label'] = "1/6 + Ashobah";
-                    break;
-                }
-            }
-            $sisa_untuk_ashobah = 0;
-        }
-        
-        // 4. KAKEK (1/6 + Ashobah jika tidak ada bapak)
-        elseif ($has_kakek && !$has_bapak && $sisa_untuk_ashobah > 0) {
-            foreach ($hasil_faraidh as &$res) {
-                if ($res['hubungan'] == 'kakek') {
-                    $res['nominal'] += $sisa_untuk_ashobah;
-                    $res['label'] = "1/6 + Ashobah";
-                    break;
-                }
-            }
-            $sisa_untuk_ashobah = 0;
-        }
-        
-        // 5. SAUDARA KANDUNG (Ashobah)
-        elseif ($has_sdr_kand && !($has_anak_lk || $has_cucu_lk || $has_bapak) && $sisa_untuk_ashobah > 0) {
-            if ($count_sdr_kand_lk > 0) {  // Ada saudara laki-laki kandung
-                if ($count_sdr_kand_pr > 0) {  // Ada saudara perempuan kandung (Ashobah Bil Ghoiri)
-                    $total_kepala = ($count_sdr_kand_lk * 2) + $count_sdr_kand_pr;
-                    $nilai_per_kepala = ($total_kepala > 0) ? $sisa_untuk_ashobah / $total_kepala : 0;
-                    
-                    foreach ($hasil_faraidh as &$res) {
-                        if ($res['hubungan'] == 'saudara laki-laki sekandung') {
-                            $res['nominal'] += $nilai_per_kepala * 2;
-                            $res['label'] = "Ashobah Bil Ghoiri (2 bagian)";
-                        } elseif ($res['hubungan'] == 'saudara perempuan sekandung') {
-                            $res['nominal'] += $nilai_per_kepala * 1;
-                            $res['label'] = "Ashobah Bil Ghoiri (1 bagian)";
-                        }
-                    }
-                } else {  // Hanya saudara laki-laki kandung saja
-                    $nilai_per_orang = ($count_sdr_kand_lk > 0) ? $sisa_untuk_ashobah / $count_sdr_kand_lk : 0;
-                    
-                    foreach ($hasil_faraidh as &$res) {
-                        if ($res['hubungan'] == 'saudara laki-laki sekandung') {
-                            $res['nominal'] += $nilai_per_orang;
-                            $res['label'] = "Ashobah Binafsihi";
-                        }
-                    }
-                }
-            } elseif ($count_sdr_kand_pr > 0) {  // Hanya saudara perempuan kandung (Ashobah Bil Ghoiri khusus)
-                // Saudara perempuan kandung saja (tanpa laki-laki) akan dapat 1/2 atau 2/3 (sudah dihitung di bagian tetap)
-                // Tidak perlu melakukan apa-apa
-            }
-            $sisa_untuk_ashobah = 0;
-        }
-        
-        // 6. SAUDARA SEBAPAK (jika tidak ada saudara kandung)
-        elseif ($has_sdr_sebpk && !$has_sdr_kand && !($has_anak_lk || $has_cucu_lk || $has_bapak) && $sisa_untuk_ashobah > 0) {
-            if ($count_sdr_sebpk_lk > 0) {  // Ada saudara laki-laki sebapak
-                if ($count_sdr_sebpk_pr > 0) {  // Ada saudara perempuan sebapak
-                    $total_kepala = ($count_sdr_sebpk_lk * 2) + $count_sdr_sebpk_pr;
-                    $nilai_per_kepala = ($total_kepala > 0) ? $sisa_untuk_ashobah / $total_kepala : 0;
-                    
-                    foreach ($hasil_faraidh as &$res) {
-                        if ($res['hubungan'] == 'saudara laki-laki sebapak') {
-                            $res['nominal'] += $nilai_per_kepala * 2;
-                            $res['label'] = "Ashobah Bil Ghoiri (2 bagian)";
-                        } elseif ($res['hubungan'] == 'saudara perempuan sebapak') {
-                            $res['nominal'] += $nilai_per_kepala * 1;
-                            $res['label'] = "Ashobah Bil Ghoiri (1 bagian)";
-                        }
-                    }
-                } else {  // Hanya saudara laki-laki sebapak saja
-                    $nilai_per_orang = ($count_sdr_sebpk_lk > 0) ? $sisa_untuk_ashobah / $count_sdr_sebpk_lk : 0;
-                    
-                    foreach ($hasil_faraidh as &$res) {
-                        if ($res['hubungan'] == 'saudara laki-laki sebapak') {
-                            $res['nominal'] += $nilai_per_orang;
-                            $res['label'] = "Ashobah Binafsihi";
-                        }
-                    }
-                }
-            } elseif ($count_sdr_sebpk_pr > 0) {  // Hanya saudara perempuan sebapak
-                // Saudara perempuan sebapak saja (tanpa laki-laki) akan dapat 1/2 atau 2/3
-                // Tidak perlu melakukan apa-apa
-            }
-            $sisa_untuk_ashobah = 0;
+            unset($r);
+            return $hasil_faraidh;
         }
 
-        // --- ASHOBAH MA'AL GHOIRI ---
-        // Saudara perempuan kandung/sebapak yang berstatus Ashobah Ma'al Ghoiri
-        // mendapat sisa harta setelah semua bagian tetap dibagikan
-        $sisa_mal_ghoiri = $total_harta - array_sum(array_column($hasil_faraidh, 'nominal'));
+        // ============================================================
+        // KASUS NORMAL: Bagikan sisa ke saudara yang berhak
+        // Urutan prioritas: kandung laki > kandung perempuan > sebapak
+        // Catatan: jika ada sdr laki kandung → sdr sebapak mahjub
+        // ============================================================
 
-        if ($sisa_mal_ghoiri > 0.01) { // toleransi floating point
-            $indeks_mal_ghoiri = [];
-            foreach ($hasil_faraidh as $idx => $r) {
-                if ($r['label'] === "Ashobah Ma'al Ghoiri") {
-                    $indeks_mal_ghoiri[] = $idx;
+        // Tentukan siapa yang berhak menerima sisa
+        $ada_sdr_kand_lk = $c['sdr_kand_lk'] > 0;
+        $ada_sdr_kand_pr = $c['sdr_kand_pr'] > 0;
+
+        $daftar_berhak = [];
+        $total_kepala  = 0;
+
+        foreach ($hasil_faraidh as $idx => $r) {
+            if ($r['label'] === 'Terhijab' || str_contains($r['label'], 'Terhijab')) continue;
+            if (!self::isSaudara($r['hubungan'])) continue;
+
+            $is_kandung = str_contains($r['hubungan'], 'sekandung');
+            $is_sebapak = str_contains($r['hubungan'], 'sebapak');
+
+            // Jika ada sdr kandung (lk atau pr), sdr sebapak mahjub
+            if ($is_sebapak && ($ada_sdr_kand_lk || $ada_sdr_kand_pr)) {
+                // Kecuali kasus khusus 1 sdri kandung + sebapak sudah dihandle di atas
+                continue;
+            }
+
+            $bagian = self::isSaudaraLaki($r['hubungan']) ? 2 : 1;
+            $total_kepala += $bagian;
+            $daftar_berhak[] = ['idx' => $idx, 'bagian' => $bagian];
+        }
+
+        if ($total_kepala > 0) {
+            $nilai_per_kepala = $sisa_untuk_sdr / $total_kepala;
+            foreach ($daftar_berhak as $data) {
+                $hasil_faraidh[$data['idx']]['nominal'] += $nilai_per_kepala * $data['bagian'];
+                $hasil_faraidh[$data['idx']]['label']    = "Ashobah (sisa dari kakek)";
+            }
+        }
+
+        return $hasil_faraidh;
+    }
+
+    // =========================================================
+    // HELPER: BAGIKAN ASHOBAH BIL GHOIRI ATAU BINAFSIHI
+    // =========================================================
+
+    private static function bagikanAshobahBilGhoiriAtauBinafsihi(
+        $hasil_faraidh, $sisa, $hub_lk, $hub_pr, $count_lk, $count_pr
+    ) {
+        if ($count_lk > 0 && $count_pr > 0) {
+            $total_kepala     = ($count_lk * 2) + $count_pr;
+            $nilai_per_kepala = $total_kepala > 0 ? $sisa / $total_kepala : 0;
+            foreach ($hasil_faraidh as &$res) {
+                if ($res['hubungan'] === $hub_lk) {
+                    $res['nominal'] = $nilai_per_kepala * 2;
+                    $res['label']   = "Ashobah Bil Ghoiri (2 bagian)";
+                } elseif ($res['hubungan'] === $hub_pr) {
+                    $res['nominal'] = $nilai_per_kepala * 1;
+                    $res['label']   = "Ashobah Bil Ghoiri (1 bagian)";
                 }
             }
-            
-            if (count($indeks_mal_ghoiri) > 0) {
-                $bagian_per_orang = $sisa_mal_ghoiri / count($indeks_mal_ghoiri);
-                foreach ($indeks_mal_ghoiri as $idx) {
-                    $hasil_faraidh[$idx]['nominal'] += $bagian_per_orang;
+        } elseif ($count_lk > 0) {
+            $nilai_per_orang = $sisa / $count_lk;
+            foreach ($hasil_faraidh as &$res) {
+                if ($res['hubungan'] === $hub_lk) {
+                    $res['nominal'] = $nilai_per_orang;
+                    $res['label']   = "Ashobah Binafsihi";
                 }
             }
         }
-        
-        // --- TAHAP 3: RADD (Kembalian Sisa) ---
-        // Hitung sisa setelah ashobah
+        return $hasil_faraidh;
+    }
+
+    // =========================================================
+    // TAHAP 2.5: ASHOBAH MA'AL GHOIRI
+    // =========================================================
+
+    private static function hitungAshobahMaalGhoiri($total_harta, $hasil_faraidh)
+    {
+        $sisa = $total_harta - array_sum(array_column($hasil_faraidh, 'nominal'));
+        if ($sisa <= 0.01) return $hasil_faraidh;
+
+        $indeks = [];
+        foreach ($hasil_faraidh as $idx => $r) {
+            if ($r['label'] === "Ashobah Ma'al Ghoiri") {
+                $indeks[] = $idx;
+            }
+        }
+
+        if (count($indeks) > 0) {
+            $bagian_per_orang = $sisa / count($indeks);
+            foreach ($indeks as $idx) {
+                $hasil_faraidh[$idx]['nominal'] += $bagian_per_orang;
+            }
+        }
+
+        return $hasil_faraidh;
+    }
+
+    // =========================================================
+    // TAHAP 3: RADD
+    // =========================================================
+
+    private static function hitungRadd($total_harta, $hasil_faraidh)
+    {
         $total_sudah_dibagi = array_sum(array_column($hasil_faraidh, 'nominal'));
-        $sisa_untuk_radd = $total_harta - $total_sudah_dibagi;
-        
-        // Cek apakah ada yang dapat ashobah
+        $sisa_harta = round($total_harta - $total_sudah_dibagi, 2);
+
+        if ($sisa_harta <= 0) return $hasil_faraidh;
+
         $ada_ashobah = false;
         foreach ($hasil_faraidh as $r) {
-            if (strpos($r['label'], 'Ashobah') !== false) {
+            if (strpos($r['label'], 'Ashobah') !== false && $r['nominal'] > 0) {
                 $ada_ashobah = true;
                 break;
             }
         }
-        
-        if ($sisa_untuk_radd > 0 && !$ada_ashobah) {
-            // Radd hanya untuk yang bukan suami/istri
-            $ahli_waris_radd = [];
-            foreach ($hasil_faraidh as $r) {
-                if ($r['nominal'] > 0 && strpos($r['hubungan'], 'suami') === false && strpos($r['hubungan'], 'istri') === false) {
-                    $ahli_waris_radd[] = $r;
-                }
-            }
-            
-            if (count($ahli_waris_radd) > 0) {
-                $total_bagian_radd = array_sum(array_column($ahli_waris_radd, 'nominal'));
-                
-                foreach ($hasil_faraidh as &$r) {
-                    if (strpos($r['hubungan'], 'suami') === false && strpos($r['hubungan'], 'istri') === false && $r['nominal'] > 0) {
-                        $proporsi = $r['nominal'] / $total_bagian_radd;
-                        $tambahan = $proporsi * $sisa_untuk_radd;
-                        $r['nominal'] += $tambahan;
-                        if (strpos($r['label'], 'Radd') === false) {
-                            $r['label'] .= " + Radd";
-                        }
-                    }
-                }
-            }
-        }
-        
-        // --- TAHAP 4: SISTEM 'AUL (Jika total bagian > 100%) ---
-        $bagian_pecahan = [];
-        
-        // Kumpulkan semua pecahan
-        foreach ($hasil_faraidh as $r) {
-            if ($r['nominal'] > 0 && (strpos($r['label'], 'Ashobah') === false && strpos($r['label'], 'Terhijab') === false)) {
-                list($pembilang, $penyebut) = self::label_ke_pecahan($r['label'], 1);
-                if ($pembilang > 0) {
-                    $bagian_pecahan[] = [$pembilang, $penyebut];
-                }
-            }
-        }
-        
-        // Hitung total pecahan
-        if (count($bagian_pecahan) > 0) {
-            // Hitung KPK dari semua penyebut
-            $penyebut_list = array_column($bagian_pecahan, 1);
-            $kpk = 1;
-            foreach ($penyebut_list as $penyebut) {
-                $kpk = self::kpk($kpk, $penyebut);
-            }
-            
-            // Hitung total pembilang setelah disamakan penyebutnya
-            $total_pembilang = 0;
-            foreach ($bagian_pecahan as $pecahan) {
-                $pembilang = $pecahan[0];
-                $penyebut = $pecahan[1];
-                $total_pembilang += $pembilang * ($kpk / $penyebut);
-            }
-            
-            // Jika total pembilang > KPK, maka perlu 'Aul
-            if ($total_pembilang > $kpk) {
-                // Terapkan 'Aul: naikkan asal masalah
-                $asal_masalah_baru = $total_pembilang;
-                
-                // Reset semua nominal dan hitung ulang dengan 'Aul
-                foreach ($hasil_faraidh as &$r) {
-                    if ($r['nominal'] > 0 && (strpos($r['label'], 'Ashobah') === false && strpos($r['label'], 'Terhijab') === false)) {
-                        list($pembilang, $penyebut) = self::label_ke_pecahan($r['label'], 1);
-                        if ($pembilang > 0) {
-                            // Hitung bagian dalam 'Aul
-                            $faktor = $kpk / $penyebut;
-                            $bagian_dalam_aul = ($pembilang * $faktor) / $asal_masalah_baru;
-                            $r['nominal'] = $total_harta * $bagian_dalam_aul;
-                            
-                            // Update label untuk menunjukkan 'Aul
-                            if (strpos($r['label'], "'Aul") === false) {
-                                $r['label'] = str_replace(" + Radd", "", $r['label']) . " ('Aul)";
-                            }
-                        }
-                    }
-                }
-                
-                // Untuk ashobah, perlu penyesuaian juga
-                foreach ($hasil_faraidh as &$r) {
-                    if (strpos($r['label'], 'Ashobah') !== false && $r['nominal'] > 0) {
-                        // Ashobah dalam 'Aul: sisa setelah bagian tetap
-                        $total_bagian_tetap_aul = 0;
-                        foreach ($hasil_faraidh as $r2) {
-                            if (strpos($r2['label'], "'Aul") !== false && $r2['nominal'] > 0) {
-                                $total_bagian_tetap_aul += $r2['nominal'];
-                            }
-                        }
-                        $sisa_aul = $total_harta - $total_bagian_tetap_aul;
-                        
-                        if ($sisa_aul > 0 && $has_anak_lk) {
-                            if ($has_anak_pr) {  // Ashobah Bil Ghoiri
-                                $total_kepala = ($count_anak_lk * 2) + $count_anak_pr;
-                                $nilai_per_kepala = ($total_kepala > 0) ? $sisa_aul / $total_kepala : 0;
-                                
-                                foreach ($hasil_faraidh as &$res) {
-                                    if ($res['hubungan'] == 'anak laki-laki') {
-                                        $res['nominal'] = $nilai_per_kepala * 2;
-                                        $res['label'] = "Ashobah Bil Ghoiri ('Aul)";
-                                    } elseif ($res['hubungan'] == 'anak perempuan') {
-                                        $res['nominal'] = $nilai_per_kepala * 1;
-                                        $res['label'] = "Ashobah Bil Ghoiri ('Aul)";
-                                    }
-                                }
-                            } else {  // Ashobah Binafsihi
-                                $nilai_per_orang = ($count_anak_lk > 0) ? $sisa_aul / $count_anak_lk : 0;
-                                foreach ($hasil_faraidh as &$res) {
-                                    if ($res['hubungan'] == 'anak laki-laki') {
-                                        $res['nominal'] = $nilai_per_orang;
-                                        $res['label'] = "Ashobah Binafsihi ('Aul)";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
+
+        if ($ada_ashobah) return $hasil_faraidh;
+
+        $hasil_faraidh[] = [
+            'hubungan' => 'Baitul Maal / Sabilillah',
+            'label'    => 'Sisa (Radd)',
+            'nominal'  => $sisa_harta,
+        ];
+
         return $hasil_faraidh;
     }
-    
-    // Helper functions
-    private static function countOccurrences($array, $value)
+
+    // =========================================================
+    // TAHAP 4: 'AUL
+    // =========================================================
+
+    private static function hitungAul($total_harta, $hasil_faraidh, $flags)
     {
-        $count = 0;
-        foreach ($array as $item) {
-            if ($item === $value) {
-                $count++;
+        $label_ashobah = [
+            'Ashobah Binafsihi', 'Ashobah Bil Ghoiri',
+            'Ashobah Bil Ghoiri (2 bagian)', 'Ashobah Bil Ghoiri (1 bagian)',
+            "Ashobah Ma'al Ghoiri", 'Ashobah',
+        ];
+
+        $bagian_pecahan = [];
+        foreach ($hasil_faraidh as $r) {
+            if ($r['nominal'] <= 0) continue;
+            if (in_array($r['label'], $label_ashobah)) continue;
+            if (strpos($r['label'], 'Terhijab') !== false) continue;
+
+            [$pembilang, $penyebut] = self::labelKePecahan($r['label']);
+            if ($pembilang > 0) {
+                $bagian_pecahan[] = [$pembilang, $penyebut];
             }
         }
-        return $count;
-    }
-    
-    private static function label_ke_pecahan($label, $count = 1)
-    {
-        if (strpos($label, "1/2") !== false) {
-            return [1, 2];
-        } elseif (strpos($label, "1/4") !== false) {
-            return [1, 4];
-        } elseif (strpos($label, "1/8") !== false) {
-            return [1, 8];
-        } elseif (strpos($label, "1/3") !== false && strpos($label, "dibagi") === false) {
-            return [1, 3];
-        } elseif (strpos($label, "1/6") !== false && strpos($label, "dibagi") === false) {
-            return [1, 6];
-        } elseif (strpos($label, "2/3") !== false) {
-            // Untuk 2/3 yang dibagi beberapa orang
-            if (strpos($label, "dibagi") !== false) {
-                // Cari angka pembagi
-                preg_match('/dibagi\s*(\d+)/', $label, $matches);
-                if (isset($matches[1])) {
-                    $pembagi = intval($matches[1]);
-                    // 2/3 dibagi n orang = (2/3) / n
-                    return [2, 3 * $pembagi];
+
+        if (empty($bagian_pecahan)) return $hasil_faraidh;
+
+        $kpk = 1;
+        foreach ($bagian_pecahan as $p) {
+            $kpk = self::kpk($kpk, $p[1]);
+        }
+
+        $total_pembilang = 0;
+        foreach ($bagian_pecahan as $p) {
+            $total_pembilang += $p[0] * ($kpk / $p[1]);
+        }
+
+        if ($total_pembilang <= $kpk) return $hasil_faraidh;
+
+        foreach ($hasil_faraidh as &$r) {
+            if ($r['nominal'] <= 0) continue;
+            if (in_array($r['label'], $label_ashobah)) continue;
+            if (strpos($r['label'], 'Terhijab') !== false) continue;
+
+            [$pembilang, $penyebut] = self::labelKePecahan($r['label']);
+            if ($pembilang > 0) {
+                $faktor           = $kpk / $penyebut;
+                $bagian_aul       = ($pembilang * $faktor) / $total_pembilang;
+                $r['nominal']     = $total_harta * $bagian_aul;
+                if (strpos($r['label'], "'Aul") === false) {
+                    $r['label'] = str_replace(" + Radd", "", $r['label']) . " ('Aul)";
                 }
+            }
+        }
+
+        return $hasil_faraidh;
+    }
+
+    // =========================================================
+    // AKDARIYAH
+    // =========================================================
+
+    private static function selesaikanAkdariyah($harta_bersih, $daftar_aw)
+    {
+        // Langkah:
+        // 1. Susun bagian awal: suami=1/2, ibu=1/3, kakek=1/6, saudari=1/2
+        // 2. Total = 9/6 → aul dengan penyebut 9
+        //    suami=3/9, ibu=2/9, kakek=1/9, saudari=3/9
+        // 3. Gabung kakek(1/9) + saudari(3/9) = 4/9, bagi 3 → kakek=8/27, saudari=4/27
+
+        $hasil_faraidh = [];
+        foreach ($daftar_aw as $aw) {
+            $hubungan = strtolower($aw['hubungan']);
+            switch ($hubungan) {
+                case 'suami':
+                    $nominal = $harta_bersih * (3 / 9);
+                    $label   = "1/2 (Aul Akdariyah)";
+                    break;
+                case 'ibu':
+                    $nominal = $harta_bersih * (2 / 9);
+                    $label   = "1/3 (Aul Akdariyah)";
+                    break;
+                case 'kakek':
+                    $nominal = $harta_bersih * (8 / 27);
+                    $label   = "1/6 (Aul Akdariyah)";
+                    break;
+                case 'saudara perempuan sekandung':
+                case 'saudara perempuan sebapak':
+                    $nominal = $harta_bersih * (4 / 27);
+                    $label   = "1/2 (Aul Akdariyah)";
+                    break;
+                default:
+                    $nominal = 0;
+                    $label   = "Terhijab (Akdariyah)";
+                    break;
+            }
+
+            $hasil_faraidh[] = [
+                'hubungan' => $aw['hubungan'],
+                'label'    => $label,
+                'nominal'  => $nominal,
+            ];
+        }
+
+        return $hasil_faraidh;
+    }
+
+    // =========================================================
+    // HELPER FUNCTIONS
+    // =========================================================
+
+    private static function isSaudara($hub)
+    {
+        return str_contains($hub, 'saudara');
+    }
+
+    private static function isSaudaraLaki($hub)
+    {
+        return str_contains($hub, 'saudara laki-laki') &&
+               (str_contains($hub, 'sekandung') || str_contains($hub, 'sebapak'));
+    }
+
+    private static function isSaudaraPerempuan($hub)
+    {
+        return str_contains($hub, 'saudara perempuan') &&
+               (str_contains($hub, 'sekandung') || str_contains($hub, 'sebapak'));
+    }
+
+    private static function countOccurrences($array, $value)
+    {
+        return count(array_filter($array, fn($item) => $item === $value));
+    }
+
+    private static function labelKePecahan($label)
+    {
+        if (str_contains($label, "1/2"))  return [1, 2];
+        if (str_contains($label, "1/4"))  return [1, 4];
+        if (str_contains($label, "1/8"))  return [1, 8];
+        if (str_contains($label, "2/3")) {
+            if (str_contains($label, "dibagi")) {
+                preg_match('/dibagi\s*(\d+)/', $label, $m);
+                $n = isset($m[1]) ? (int)$m[1] : 1;
+                return [2, 3 * $n];
             }
             return [2, 3];
         }
+        if (str_contains($label, "1/3")) {
+            if (str_contains($label, "dibagi")) {
+                preg_match('/dibagi\s*(\d+)/', $label, $m);
+                $n = isset($m[1]) ? (int)$m[1] : 1;
+                return [1, 3 * $n];
+            }
+            return [1, 3];
+        }
+        if (str_contains($label, "1/6")) {
+            if (str_contains($label, "dibagi")) {
+                preg_match('/dibagi\s*(\d+)/', $label, $m);
+                $n = isset($m[1]) ? (int)$m[1] : 1;
+                return [1, 6 * $n];
+            }
+            return [1, 6];
+        }
         return [0, 1];
     }
-    
+
     private static function gcd($a, $b)
     {
-        while ($b != 0) {
-            $temp = $b;
-            $b = $a % $b;
-            $a = $temp;
-        }
+        while ($b != 0) { [$a, $b] = [$b, $a % $b]; }
         return $a;
     }
-    
+
     private static function kpk($a, $b)
     {
         return ($a * $b) / self::gcd($a, $b);
-    }
-    
-    // Public method untuk memanggil dari controller
-    public static function calculate($harta_bersih, $daftar_ahli_waris)
-    {
-        return self::engine_faraidh_full($harta_bersih, $daftar_ahli_waris);
     }
 }
