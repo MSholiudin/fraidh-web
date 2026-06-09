@@ -25,7 +25,7 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Istri wafat, tidak ada anak maupun cucu.',
-                        'solusi'   => 'Suami mendapat 1/2 dari seluruh harta warisan.',
+                        'solusi'   => 'Tidak ada anak maupun cucu, sehingga suami mendapat 1/2. Asal masalah 2: suami mendapat 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 2,
                             'tashih'       => null,
@@ -36,14 +36,14 @@ class EdukasiAhliWarisSeeder extends Seeder
                     ],
                     [
                         'skenario' => 'Istri wafat, ada 1 anak laki-laki dan 1 anak perempuan.',
-                        'solusi'   => 'Suami mendapat 1/4, sisa harta dibagi anak laki-laki dan perempuan dengan rasio 2:1.',
+                        'solusi'   => 'Karena ada anak, suami turun menjadi 1/4. Asal masalah 4: suami 1 saham, sisa 3 saham untuk anak laki-laki (2 saham) dan anak perempuan (1 saham) dengan rasio 2:1.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 4,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'suami',   'bagian' => '1/4',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak lk', 'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak pr', 'bagian' => 'ashobah (sisa)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'suami',           'bagian' => '1/4',                'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki',  'bagian' => 'ashobah binafsihi',  'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan',  'bagian' => 'ashobah binafsihi',  'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -60,7 +60,7 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Suami wafat, tidak ada anak maupun cucu.',
-                        'solusi'   => 'Istri mendapat 1/4 dari seluruh harta warisan.',
+                        'solusi'   => 'Tidak ada anak maupun cucu, sehingga istri mendapat 1/4. Asal masalah 4: istri mendapat 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 4,
                             'tashih'       => null,
@@ -71,26 +71,26 @@ class EdukasiAhliWarisSeeder extends Seeder
                     ],
                     [
                         'skenario' => 'Suami wafat, ada 1 anak laki-laki.',
-                        'solusi'   => 'Istri mendapat 1/8, sisa seluruhnya untuk anak laki-laki (Ashobah).',
+                        'solusi'   => 'Karena ada anak, istri turun menjadi 1/8. Asal masalah 8: istri 1 saham, sisa 7 saham untuk anak laki-laki sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 8,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'istri',   'bagian' => '1/8',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak lk', 'bagian' => 'ashobah (sisa)', 'saham' => 7, 'saham_tashih' => null],
+                                ['ahli_waris' => 'istri',          'bagian' => '1/8',           'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki', 'bagian' => 'ashobah (sisa)', 'saham' => 7, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Suami wafat, ada 1 anak laki-laki, suami memiliki 2 istri.',
-                        'solusi'   => 'Total bagian istri 1/8, dibagi rata antara 2 istri sehingga masing-masing mendapat 1/16.',
+                        'solusi'   => 'Karena ada anak, total bagian istri 1/8 dibagi rata untuk 2 istri. 1/8 dari asal masalah 8 = 1, tidak bisa dibagi 2, jadi tashih 16; masing-masing istri mendapat 1 saham tashih. Sisa 14 saham untuk anak laki-laki.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 8,
                             'tashih'       => 16,
                             'baris' => [
-                                ['ahli_waris' => 'istri 1', 'bagian' => '1/8 ÷ 2', 'saham' => 1, 'saham_tashih' => 1],
-                                ['ahli_waris' => 'istri 2', 'bagian' => '1/8 ÷ 2', 'saham' => 1, 'saham_tashih' => 1],
-                                ['ahli_waris' => 'anak lk', 'bagian' => 'ashobah (sisa)', 'saham' => 6, 'saham_tashih' => 14],
+                                ['ahli_waris' => 'istri 1',         'bagian' => '1/8 ÷ 2',       'saham' => '1/16', 'saham_tashih' => 1],
+                                ['ahli_waris' => 'istri 2',         'bagian' => '1/8 ÷ 2',       'saham' => '1/16', 'saham_tashih' => 1],
+                                ['ahli_waris' => 'anak laki-laki',  'bagian' => 'ashobah (sisa)', 'saham' => 7,      'saham_tashih' => 14],
                             ],
                         ],
                     ],
@@ -111,39 +111,39 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Ada anak laki-laki, ibu, dan bapak.',
-                        'solusi'   => 'Bapak dan ibu masing-masing mendapat 1/6, sisa untuk anak laki-laki (Ashobah).',
+                        'solusi'   => 'Ada anak laki-laki, sehingga bapak dan ibu masing-masing mendapat 1/6. Asal masalah 6: bapak 1 saham, ibu 1 saham, sisa 4 saham untuk anak laki-laki sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'bapak',   'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'ibu',     'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak lk', 'bagian' => 'ashobah (sisa)', 'saham' => 4, 'saham_tashih' => null],
+                                ['ahli_waris' => 'bapak',          'bagian' => '1/6',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',            'bagian' => '1/6',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki', 'bagian' => 'ashobah (sisa)', 'saham' => 4, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Hanya ada 1 anak perempuan, ibu, dan bapak.',
-                        'solusi'   => 'Anak perempuan 1/2, ibu 1/6, bapak 1/6 + sisa (Ashobah).',
+                        'solusi'   => 'Ada anak perempuan tanpa anak laki-laki, sehingga bapak mendapat 1/6 + sisa (ashobah). Asal masalah 6: anak perempuan 3 saham (1/2), ibu 1 saham (1/6), bapak mendapat 2 saham sisa.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
-                            'tashih'       => 18,
+                            'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'bapak',   'bagian' => '1/6 + sisa',    'saham' => 1, 'saham_tashih' => 8],
-                                ['ahli_waris' => 'ibu',     'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => 3],
-                                ['ahli_waris' => 'anak pr', 'bagian' => '1/2',           'saham' => 3, 'saham_tashih' => 9],
+                                ['ahli_waris' => 'bapak',          'bagian' => 'Ashobah', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',            'bagian' => '1/6',     'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan', 'bagian' => '1/2',     'saham' => 3, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Tidak ada anak maupun cucu, hanya bapak dan ibu.',
-                        'solusi'   => 'Ibu mendapat 1/3, bapak mendapat sisa seluruhnya sebagai Ashobah.',
+                        'solusi'   => 'Tidak ada anak maupun cucu. Ibu mendapat 1/3, bapak mendapat sisa seluruhnya sebagai ashobah. Asal masalah 3: ibu 1 saham, bapak 2 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => null,
                             'baris' => [
                                 ['ahli_waris' => 'bapak', 'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
-                                ['ahli_waris' => 'ibu',   'bagian' => '1/3',           'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',   'bagian' => '1/3',            'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -160,38 +160,40 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Tidak ada anak dan hanya ada ibu serta bapak.',
-                        'solusi'   => 'Ibu mendapat 1/3, bapak mendapat sisa (Ashobah).',
+                        'solusi'   => 'Tidak ada anak dan tidak ada saudara lebih dari satu, sehingga ibu mendapat 1/3. Asal masalah 3: ibu 1 saham, bapak 2 saham sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'ibu',   'bagian' => '1/3',           'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',   'bagian' => '1/3',            'saham' => 1, 'saham_tashih' => null],
                                 ['ahli_waris' => 'bapak', 'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada 2 saudara kandung, tidak ada anak.',
-                        'solusi'   => 'Ibu terhalang sebagian (Hijab Nuqshan) menjadi 1/6 karena ada 2+ saudara.',
+                        'solusi'   => 'Ada 2 saudara kandung menyebabkan ibu terhalang sebagian (hijab nuqshan) dari 1/3 menjadi 1/6. Asal masalah 6: ibu 1 saham, bapak 5 saham sebagai ashobah. Kedua saudara kandung terhijab, tidak mendapat apa-apa.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'ibu',   'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'bapak', 'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',              'bagian' => '1/6',            'saham' => 1,    'saham_tashih' => null],
+                                ['ahli_waris' => 'bapak',            'bagian' => 'ashobah (sisa)', 'saham' => 5,    'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara kandung 1','bagian' => 'Terhijab',       'saham' => null, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara kandung 2','bagian' => 'Terhijab',       'saham' => null, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada anak laki-laki, ibu, dan bapak.',
-                        'solusi'   => 'Ibu mendapat 1/6 karena ada anak. Bapak 1/6, sisa untuk anak laki-laki.',
+                        'solusi'   => 'Ada anak laki-laki, sehingga ibu turun menjadi 1/6. Asal masalah 6: ibu 1 saham, bapak 1 saham (1/6), sisa 4 saham untuk anak laki-laki sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'ibu',     'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'bapak',   'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak lk', 'bagian' => 'ashobah (sisa)', 'saham' => 4, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',            'bagian' => '1/6',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'bapak',          'bagian' => '1/6',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki', 'bagian' => 'ashobah (sisa)', 'saham' => 4, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -212,26 +214,26 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Anak laki-laki mewaris sendirian tanpa ahli waris lain.',
-                        'solusi'   => 'Mendapat seluruh harta warisan.',
+                        'solusi'   => 'Tidak ada ahli waris lain, seluruh harta jatuh kepada anak laki-laki sebagai ashobah binafsihi.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 1,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'anak lk', 'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki', 'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Bersama bapak, ibu, dan 2 anak perempuan.',
-                        'solusi'   => 'Bapak 1/6, ibu 1/6, sisa dibagi anak laki-laki (2 bagian) dan tiap anak perempuan (1 bagian).',
+                        'solusi'   => 'Bapak dan ibu masing-masing mendapat 1/6. Sisa 4/6 untuk ashobah (1 anak laki-laki + 2 anak perempuan, rasio 2:1 = 4 kepala). Asal masalah 6: bapak 1, ibu 1, ashobah 4. Karena 4 tidak habis dibagi 4 kepala (AL=2, AP=1, AP=1), dilakukan tashih: 6 × 3 = 18. Bapak 3, ibu 3, anak laki-laki 8, anak perempuan 4.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => 18,
                             'baris' => [
-                                ['ahli_waris' => 'bapak',   'bagian' => '1/6',              'saham' => 1, 'saham_tashih' => 3],
-                                ['ahli_waris' => 'ibu',     'bagian' => '1/6',              'saham' => 1, 'saham_tashih' => 3],
-                                ['ahli_waris' => 'anak lk', 'bagian' => 'ashobah bilghoiri', 'saham' => 4, 'saham_tashih' => 8],
-                                ['ahli_waris' => 'anak pr', 'bagian' => 'ashobah bilghoiri', 'saham' => 4, 'saham_tashih' => 4],
+                                ['ahli_waris' => 'bapak',          'bagian' => '1/6',              'saham' => 1,    'saham_tashih' => 3],
+                                ['ahli_waris' => 'ibu',            'bagian' => '1/6',              'saham' => 1,    'saham_tashih' => 3],
+                                ['ahli_waris' => 'anak laki-laki', 'bagian' => 'ashobah bilghoiri','saham' => 4,    'saham_tashih' => 8],
+                                ['ahli_waris' => 'anak perempuan', 'bagian' => 'ashobah bilghoiri','saham' => null, 'saham_tashih' => 4],
                             ],
                         ],
                     ],
@@ -248,38 +250,38 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => '1 anak perempuan, tidak ada anak laki-laki, tidak ada Ashobah.',
-                        'solusi'   => 'Mendapat 1/2, sisa dikembalikan kepadanya (Radd).',
+                        'solusi'   => 'Hanya 1 anak perempuan tanpa ashobah, mendapat 1/2. Asal masalah 2: anak perempuan 1 saham. Sisa 1 saham dikembalikan kepadanya melalui radd.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 2,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'anak pr', 'bagian' => '1/2', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan', 'bagian' => '1/2', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => '3 anak perempuan, tidak ada anak laki-laki.',
-                        'solusi'   => 'Mendapat 2/3 dibagi rata, masing-masing 2/9.',
+                        'solusi'   => '3 anak perempuan tanpa anak laki-laki mendapat 2/3 dibagi rata. 2/3 dari asal masalah 3 = 2, tidak bisa dibagi 3 orang, jadi tashih 9; 9 × 2/3 = 6, dibagi 3 = 2 saham tashih masing-masing.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => 9,
                             'baris' => [
-                                ['ahli_waris' => 'anak pr 1', 'bagian' => '2/3 ÷ 3', 'saham' => 2, 'saham_tashih' => 2],
-                                ['ahli_waris' => 'anak pr 2', 'bagian' => '2/3 ÷ 3', 'saham' => 2, 'saham_tashih' => 2],
-                                ['ahli_waris' => 'anak pr 3', 'bagian' => '2/3 ÷ 3', 'saham' => 2, 'saham_tashih' => 2],
+                                ['ahli_waris' => 'anak perempuan 1', 'bagian' => '2/3 ÷ 3', 'saham' => '3/9', 'saham_tashih' => 2],
+                                ['ahli_waris' => 'anak perempuan 2', 'bagian' => '2/3 ÷ 3', 'saham' => '3/9', 'saham_tashih' => 2],
+                                ['ahli_waris' => 'anak perempuan 3', 'bagian' => '2/3 ÷ 3', 'saham' => '3/9', 'saham_tashih' => 2],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada 1 anak laki-laki dan 2 anak perempuan.',
-                        'solusi'   => 'Sisa harta (Ashobah) dibagi: anak laki-laki 2 bagian, tiap anak perempuan 1 bagian.',
+                        'solusi'   => 'Ada anak laki-laki, sehingga semua masuk ashobah bilghoiri dengan rasio 2:1. Asal masalah 4: anak laki-laki 2 saham, tiap anak perempuan 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 4,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'anak lk',   'bagian' => 'ashobah bilghoiri', 'saham' => 2, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak pr 1', 'bagian' => 'ashobah bilghoiri', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak pr 2', 'bagian' => 'ashobah bilghoiri', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki',   'bagian' => 'ashobah bilghoiri', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan 1', 'bagian' => 'ashobah bilghoiri', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan 2', 'bagian' => 'ashobah bilghoiri', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -300,25 +302,25 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Ada anak laki-laki dan cucu laki-laki.',
-                        'solusi'   => 'Cucu laki-laki terhalang (Mahjub) oleh anak laki-laki, tidak mendapat apa-apa.',
+                        'solusi'   => 'Ada anak laki-laki yang menghijab cucu laki-laki secara penuh. Anak laki-laki mendapat seluruh harta sebagai ashobah, cucu laki-laki tidak mendapat apa-apa.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 1,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'anak lk',  'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'cucu lk',  'bagian' => 'mahjub',          'saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki', 'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'cucu laki-laki', 'bagian' => 'mahjub',          'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Tidak ada anak, mewaris bersama istri.',
-                        'solusi'   => 'Istri mendapat 1/4, cucu laki-laki mendapat sisa (Ashobah).',
+                        'solusi'   => 'Tidak ada anak, sehingga cucu laki-laki menggantikan posisi anak. Istri mendapat 1/4 karena tidak ada anak. Asal masalah 4: istri 1 saham, cucu laki-laki 3 saham sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 4,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'istri',   'bagian' => '1/4',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'cucu lk', 'bagian' => 'ashobah (sisa)', 'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'istri',          'bagian' => '1/4',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'cucu laki-laki', 'bagian' => 'ashobah (sisa)', 'saham' => 3, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -335,40 +337,40 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Bersama 1 anak perempuan, tidak ada cucu laki-laki.',
-                        'solusi'   => 'Anak perempuan mendapat 1/2, cucu perempuan mendapat 1/6 (Takmilah untuk menyempurnakan 2/3).',
+                        'solusi'   => 'Anak perempuan mendapat 1/2, jatah 2/3 belum terpenuhi sehingga cucu perempuan mendapat 1/6 takmilah untuk menyempurnakan 2/3. Asal masalah 6: anak perempuan 3 saham, cucu perempuan 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'anak pr', 'bagian' => '1/2',             'saham' => 3, 'saham_tashih' => null],
-                                ['ahli_waris' => 'cucu pr', 'bagian' => '1/6 (takmilah)',  'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan', 'bagian' => '1/2',            'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'cucu perempuan', 'bagian' => '1/6 (takmilah)', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada 2 anak perempuan, tidak ada cucu laki-laki.',
-                        'solusi'   => 'Cucu perempuan terhalang (Mahjub) karena 2/3 sudah penuh untuk 2 anak perempuan.',
+                        'solusi'   => 'Ada 2 anak perempuan yang sudah menghabiskan jatah 2/3, sehingga cucu perempuan terhijab penuh. Asal masalah 3: tiap anak perempuan 1 saham, cucu perempuan tidak mendapat apa-apa.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'anak pr 1', 'bagian' => '2/3 ÷ 2', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak pr 2', 'bagian' => '2/3 ÷ 2', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'cucu pr',   'bagian' => 'mahjub',   'saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan 1', 'bagian' => '2/3 ÷ 2', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan 2', 'bagian' => '2/3 ÷ 2', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'cucu perempuan',   'bagian' => 'mahjub',   'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada 2 anak perempuan dan 1 cucu laki-laki.',
-                        'solusi'   => 'Cucu perempuan tidak terhalang, ikut Ashobah Bil Ghoiri bersama cucu laki-laki dengan rasio 2:1.',
+                        'solusi'   => '2 anak perempuan mendapat 2/3 dibagi rata, sisa 1/3 untuk cucu laki-laki dan cucu perempuan (ashobah bilghoiri, rasio 2:1). Asal masalah 3: tiap anak perempuan 1 saham, ashobah 1 saham. Karena 1 tidak habis dibagi 3 kepala (CL=2, CP=1), tashih 9; anak perempuan 1 menjadi 3, anak perempuan 2 menjadi 3, cucu laki-laki 2, cucu perempuan 1.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => 9,
                             'baris' => [
-                                ['ahli_waris' => 'anak pr 1', 'bagian' => '2/3 ÷ 2',       'saham' => 1, 'saham_tashih' => 3],
-                                ['ahli_waris' => 'anak pr 2', 'bagian' => '2/3 ÷ 2',       'saham' => 1, 'saham_tashih' => 3],
-                                ['ahli_waris' => 'cucu lk',   'bagian' => 'ashobah bilghoiri', 'saham' => 1, 'saham_tashih' => 2],
-                                ['ahli_waris' => 'cucu pr',   'bagian' => 'ashobah bilghoiri', 'saham' => 1, 'saham_tashih' => 1],
+                                ['ahli_waris' => 'anak perempuan 1', 'bagian' => '2/3 ÷ 2',          'saham' => 1,    'saham_tashih' => 3],
+                                ['ahli_waris' => 'anak perempuan 2', 'bagian' => '2/3 ÷ 2',          'saham' => 1,    'saham_tashih' => 3],
+                                ['ahli_waris' => 'cucu laki-laki',   'bagian' => 'ashobah bilghoiri', 'saham' => 1,    'saham_tashih' => 2],
+                                ['ahli_waris' => 'cucu perempuan',   'bagian' => 'ashobah bilghoiri', 'saham' => null, 'saham_tashih' => 1],
                             ],
                         ],
                     ],
@@ -389,37 +391,37 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Ada bapak dan kakek sekaligus.',
-                        'solusi'   => 'Kakek terhalang penuh (Mahjub) oleh bapak, tidak mendapat apa-apa.',
+                        'solusi'   => 'Bapak masih ada sehingga menghijab kakek secara penuh. Bapak mendapat 1/6 + sisa ashobah, kakek tidak mendapat apa-apa.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'bapak', 'bagian' => '1/6 + sisa',  'saham' => 6, 'saham_tashih' => null],
-                                ['ahli_waris' => 'kakek', 'bagian' => 'mahjub',       'saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'bapak', 'bagian' => '1/6 + sisa', 'saham' => 6, 'saham_tashih' => null],
+                                ['ahli_waris' => 'kakek', 'bagian' => 'mahjub',      'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Tidak ada bapak, ada anak laki-laki dan kakek.',
-                        'solusi'   => 'Kakek mendapat 1/6, sisa untuk anak laki-laki (Ashobah).',
+                        'solusi'   => 'Tidak ada bapak, kakek menggantikan posisinya. Ada anak laki-laki, sehingga kakek mendapat 1/6. Asal masalah 6: kakek 1 saham, sisa 5 saham untuk anak laki-laki sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'kakek',   'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak lk', 'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
+                                ['ahli_waris' => 'kakek',          'bagian' => '1/6',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki', 'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Hanya kakek dan 1 saudara kandung (kalalah).',
-                        'solusi'   => 'Kakek memilih muqossamah (½ masing-masing) karena lebih menguntungkan dari 1/3.',
+                        'solusi'   => 'Kalalah dengan 1 saudara. Opsi muqosamah: kakek dihitung 2 kepala, saudara 2 kepala → kakek 2/4 = 1/2. Opsi 1/3 harta: kakek = 1/3. Muqosamah (1/2) lebih besar, dipilih. Asal masalah 2: kakek 1 saham, saudara 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 2,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'kakek',          'bagian' => 'muqossamah (½)', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara kandung','bagian' => 'muqossamah (½)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'kakek',           'bagian' => 'muqossamah (½)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara kandung', 'bagian' => 'muqossamah (½)', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -436,25 +438,25 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Ada ibu dan nenek pihak bapak.',
-                        'solusi'   => 'Nenek pihak bapak terhalang penuh oleh ibu.',
+                        'solusi'   => 'Ibu masih ada sehingga menghijab nenek pihak bapak secara penuh. Asal masalah 3: ibu 1 saham (1/3), nenek tidak mendapat apa-apa.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'ibu',              'bagian' => '1/3',  'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'nenek pihak bapak','bagian' => 'mahjub','saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',               'bagian' => '1/3',   'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'nenek pihak bapak', 'bagian' => 'mahjub', 'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada nenek pihak bapak dan nenek pihak ibu, tidak ada ibu/bapak.',
-                        'solusi'   => 'Keduanya berbagi rata 1/6 (masing-masing 1/12).',
+                        'solusi'   => 'Tidak ada ibu maupun bapak, keduanya berbagi rata 1/6. 1/6 dari asal masalah 6 = 1, tidak bisa dibagi 2, jadi tashih 12; masing-masing mendapat 1 saham tashih.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => 12,
                             'baris' => [
-                                ['ahli_waris' => 'nenek pihak bapak', 'bagian' => '1/6 ÷ 2', 'saham' => 1, 'saham_tashih' => 1],
-                                ['ahli_waris' => 'nenek pihak ibu',   'bagian' => '1/6 ÷ 2', 'saham' => 1, 'saham_tashih' => 1],
+                                ['ahli_waris' => 'nenek pihak bapak', 'bagian' => '1/6 ÷ 2', 'saham' => 1,    'saham_tashih' => 1],
+                                ['ahli_waris' => 'nenek pihak ibu',   'bagian' => '1/6 ÷ 2', 'saham' => null, 'saham_tashih' => 1],
                             ],
                         ],
                     ],
@@ -471,25 +473,25 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Ada ibu dan nenek pihak ibu.',
-                        'solusi'   => 'Nenek pihak ibu terhalang penuh oleh ibu.',
+                        'solusi'   => 'Ibu masih ada sehingga menghijab nenek pihak ibu secara penuh. Asal masalah 3: ibu 1 saham (1/3), nenek tidak mendapat apa-apa.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'ibu',            'bagian' => '1/3',   'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'nenek pihak ibu','bagian' => 'mahjub', 'saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',             'bagian' => '1/3',   'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'nenek pihak ibu', 'bagian' => 'mahjub', 'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Tidak ada ibu, nenek pihak ibu mewaris sendirian bersama anak laki-laki.',
-                        'solusi'   => 'Nenek pihak ibu mendapat 1/6, sisa untuk anak laki-laki (Ashobah).',
+                        'solusi'   => 'Tidak ada ibu, nenek pihak ibu mendapat 1/6. Asal masalah 6: nenek 1 saham, sisa 5 saham untuk anak laki-laki sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'nenek pihak ibu', 'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak lk',         'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
+                                ['ahli_waris' => 'nenek pihak ibu', 'bagian' => '1/6',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki',  'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -510,7 +512,7 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Ada 1 saudara seibu, tidak ada anak/cucu/bapak/kakek (kalalah).',
-                        'solusi'   => 'Saudara seibu mendapat 1/6.',
+                        'solusi'   => 'Kalalah dengan 1 saudara seibu, mendapat 1/6. Asal masalah 6: saudara seibu 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
@@ -521,26 +523,26 @@ class EdukasiAhliWarisSeeder extends Seeder
                     ],
                     [
                         'skenario' => 'Ada 3 saudara seibu (2 laki-laki, 1 perempuan), kalalah.',
-                        'solusi'   => 'Mendapat 1/3 dibagi rata (masing-masing 1/9) karena laki-perempuan setara untuk saudara seibu.',
+                        'solusi'   => 'Mendapat 1/3 dibagi rata karena laki-perempuan setara untuk saudara seibu. 1/3 dari asal masalah 3 = 1, tidak bisa dibagi 3 orang, jadi tashih 9; 9 dibagi 3 = 3 saham per orang, lalu 3 dibagi 3 = 1 saham tashih masing-masing.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => 9,
                             'baris' => [
-                                ['ahli_waris' => 'saudara seibu lk 1', 'bagian' => '1/3 ÷ 3', 'saham' => 1, 'saham_tashih' => 1],
-                                ['ahli_waris' => 'saudara seibu lk 2', 'bagian' => '1/3 ÷ 3', 'saham' => 1, 'saham_tashih' => 1],
-                                ['ahli_waris' => 'saudara seibu pr',   'bagian' => '1/3 ÷ 3', 'saham' => 1, 'saham_tashih' => 1],
+                                ['ahli_waris' => 'saudara seibu laki-laki 1', 'bagian' => '1/3 ÷ 3', 'saham' => null, 'saham_tashih' => 1],
+                                ['ahli_waris' => 'saudara seibu laki-laki 2', 'bagian' => '1/3 ÷ 3', 'saham' => 1,    'saham_tashih' => 1],
+                                ['ahli_waris' => 'saudara seibu perempuan',   'bagian' => '1/3 ÷ 3', 'saham' => null, 'saham_tashih' => 1],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada anak laki-laki dan saudara seibu.',
-                        'solusi'   => 'Saudara seibu terhalang penuh (Mahjub) oleh anak laki-laki.',
+                        'solusi'   => 'Ada anak laki-laki yang menghijab saudara seibu secara penuh. Anak laki-laki mendapat seluruh harta sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 1,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'anak lk',      'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara seibu','bagian' => 'mahjub',          'saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak laki-laki', 'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara seibu',  'bagian' => 'mahjub',          'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -561,25 +563,25 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Mewaris bersama ibu, tidak ada anak/cucu/bapak (kalalah).',
-                        'solusi'   => 'Ibu mendapat 1/6, saudara laki-laki kandung mendapat sisa (Ashobah).',
+                        'solusi'   => 'Kalalah, tidak ada anak/cucu/bapak. Ibu mendapat 1/6. Asal masalah 6: ibu 1 saham, saudara laki-laki kandung 5 saham sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'ibu',                    'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk sekandung',   'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',                         'bagian' => '1/6',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki sekandung', 'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada bapak dan saudara laki-laki kandung.',
-                        'solusi'   => 'Saudara laki-laki kandung terhalang penuh oleh bapak.',
+                        'solusi'   => 'Bapak masih ada sehingga menghijab saudara laki-laki kandung secara penuh. Bapak mendapat seluruh harta sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 1,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'bapak',                'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk sekandung', 'bagian' => 'mahjub',          'saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'bapak',                       'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki sekandung', 'bagian' => 'mahjub',          'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -596,36 +598,36 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => '1 saudara perempuan kandung, tidak ada saudara laki-laki, kalalah.',
-                        'solusi'   => 'Mendapat 1/2.',
+                        'solusi'   => 'Kalalah, hanya 1 saudara perempuan kandung tanpa saudara laki-laki. Mendapat 1/2. Asal masalah 2: 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 2,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'saudara pr sekandung', 'bagian' => '1/2', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sekandung', 'bagian' => '1/2', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Bersama 1 anak perempuan, tidak ada saudara laki-laki kandung.',
-                        'solusi'   => 'Anak perempuan 1/2, saudara perempuan kandung mendapat sisa (Ashobah Ma\'al Ghoiri).',
+                        'solusi'   => 'Anak perempuan mendapat 1/2, sisa 1/2 jatuh ke saudara perempuan kandung sebagai ashobah ma\'al ghoiri. Asal masalah 2: anak perempuan 1 saham, saudara perempuan kandung 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 2,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'anak pr',              'bagian' => '1/2',                   'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara pr sekandung', 'bagian' => 'ashobah ma\'al ghoiri', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan',              'bagian' => '1/2',                   'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sekandung', 'bagian' => 'ashobah ma\'al ghoiri', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Bersama 1 saudara laki-laki kandung, kalalah.',
-                        'solusi'   => 'Sisa dibagi rasio 2:1 (Ashobah Bil Ghoiri), saudara laki-laki 2 bagian, saudara perempuan 1 bagian.',
+                        'solusi'   => 'Kalalah bersama 1 saudara laki-laki kandung, masuk ashobah bilghoiri rasio 2:1. Asal masalah 3: saudara laki-laki 2 saham, saudara perempuan 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'saudara lk sekandung', 'bagian' => 'ashobah bilghoiri', 'saham' => 2, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara pr sekandung', 'bagian' => 'ashobah bilghoiri', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki sekandung', 'bagian' => 'ashobah bilghoiri', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sekandung', 'bagian' => 'ashobah bilghoiri', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -646,25 +648,25 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Ada saudara laki-laki kandung dan saudara laki-laki sebapak.',
-                        'solusi'   => 'Saudara laki-laki sebapak terhalang penuh oleh saudara laki-laki kandung.',
+                        'solusi'   => 'Saudara laki-laki kandung masih ada sehingga menghijab saudara laki-laki sebapak secara penuh. Saudara kandung mendapat seluruh harta sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 1,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'saudara lk sekandung', 'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk sebapak',   'bagian' => 'mahjub',          'saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki sekandung', 'bagian' => 'ashobah (semua)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki sebapak',   'bagian' => 'mahjub',          'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Tidak ada saudara kandung, mewaris bersama ibu.',
-                        'solusi'   => 'Ibu mendapat 1/6, saudara laki-laki sebapak mendapat sisa (Ashobah).',
+                        'solusi'   => 'Tidak ada saudara kandung, kalalah. Ibu mendapat 1/6. Asal masalah 6: ibu 1 saham, saudara laki-laki sebapak 5 saham sebagai ashobah.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'ibu',                 'bagian' => '1/6',           'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk sebapak',  'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',                       'bagian' => '1/6',            'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki sebapak', 'bagian' => 'ashobah (sisa)', 'saham' => 5, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -681,37 +683,37 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => '1 saudara perempuan sebapak, tidak ada saudara kandung sama sekali.',
-                        'solusi'   => 'Mendapat 1/2.',
+                        'solusi'   => 'Tidak ada saudara kandung sama sekali, kalalah. 1 saudara perempuan sebapak mendapat 1/2. Asal masalah 2: 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 2,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'saudara pr sebapak', 'bagian' => '1/2', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sebapak', 'bagian' => '1/2', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Bersama 1 saudara perempuan kandung, tidak ada saudara laki-laki.',
-                        'solusi'   => 'Saudara perempuan kandung mendapat 1/2, saudara perempuan sebapak mendapat 1/6 (Takmilah untuk 2/3).',
+                        'solusi'   => 'Saudara perempuan kandung mendapat 1/2, jatah 2/3 belum terpenuhi sehingga saudara perempuan sebapak mendapat 1/6 takmilah. Asal masalah 6: saudara perempuan kandung 3 saham, saudara perempuan sebapak 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'saudara pr sekandung', 'bagian' => '1/2',            'saham' => 3, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara pr sebapak',   'bagian' => '1/6 (takmilah)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sekandung', 'bagian' => '1/2',            'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sebapak',   'bagian' => '1/6 (takmilah)', 'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Ada 2 saudara perempuan kandung, tidak ada saudara laki-laki sebapak.',
-                        'solusi'   => 'Saudara perempuan sebapak terhalang karena 2/3 sudah habis untuk 2 saudara perempuan kandung.',
+                        'solusi'   => '2 saudara perempuan kandung sudah menghabiskan jatah 2/3, sehingga saudara perempuan sebapak terhijab penuh. Asal masalah 3: tiap saudara perempuan kandung 1 saham, saudara perempuan sebapak tidak mendapat apa-apa.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'saudara pr sekandung 1', 'bagian' => '2/3 ÷ 2', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara pr sekandung 2', 'bagian' => '2/3 ÷ 2', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara pr sebapak',     'bagian' => 'mahjub',   'saham' => 0, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sekandung 1', 'bagian' => '2/3 ÷ 2', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sekandung 2', 'bagian' => '2/3 ÷ 2', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara perempuan sebapak',     'bagian' => 'mahjub',   'saham' => 0, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -719,6 +721,9 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'urutan' => 16,
             ],
 
+            // ================================================
+            // KASUS KHUSUS
+            // ================================================
             [
                 'nama_ahli_waris'  => 'gharrawain',
                 'kelompok'         => 'Kasus Khusus',
@@ -729,20 +734,20 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Pewaris meninggalkan suami, ibu, dan bapak.',
-                        'solusi'   => 'Suami mendapat 1/2. Dari sisa 1/2, ibu mendapat 1/3 sisa (= 1/6 total) dan bapak mendapat 2/3 sisa (= 2/6 total) sebagai ashobah.',
+                        'solusi'   => 'Suami mendapat 1/2 = 3 saham. Sisa 3 saham: ibu mendapat 1/3 dari sisa = 1 saham, bapak mendapat 2/3 sisa = 2 saham sebagai ashobah. Asal masalah 6.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'suami', 'bagian' => '1/2',             'saham' => 3, 'saham_tashih' => null],
-                                ['ahli_waris' => 'ibu',   'bagian' => '1/3 sisa',        'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'bapak', 'bagian' => 'ashobah (sisa)',  'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'suami', 'bagian' => '1/2',            'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',   'bagian' => '1/3 sisa',       'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'bapak', 'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Pewaris meninggalkan istri, ibu, dan bapak.',
-                        'solusi'   => 'Istri mendapat 1/4. Dari sisa 3/4, ibu mendapat 1/3 sisa (= 1/4 total) dan bapak mendapat 2/3 sisa (= 2/4 total) sebagai ashobah.',
+                        'solusi'   => 'Istri mendapat 1/4 = 1 saham. Sisa 3 saham: ibu mendapat 1/3 dari sisa = 1 saham, bapak mendapat 2/3 sisa = 2 saham sebagai ashobah. Asal masalah 4.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 4,
                             'tashih'       => null,
@@ -756,7 +761,7 @@ class EdukasiAhliWarisSeeder extends Seeder
                 ],
                 'urutan' => 17,
             ],
-        
+
             [
                 'nama_ahli_waris'  => 'akdariyah',
                 'kelompok'         => 'Kasus Khusus',
@@ -767,23 +772,23 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Pewaris meninggalkan suami, ibu, kakek, dan 1 saudara perempuan kandung.',
-                        'solusi'   => 'Langkah 1: Tetapkan bagian awal — suami 1/2, ibu 1/3, kakek 1/6, saudari 1/2. Total = 9/6 → terjadi Aul menjadi /9. Langkah 2: Gabungkan bagian kakek (1/9) + saudari (3/9) = 4/9, lalu bagi 2:1 → kakek 8/27, saudari 4/27.',
+                        'solusi'   => 'Langkah 1 — tetapkan bagian awal: suami 1/2, ibu 1/3, kakek 1/6, saudari 1/2. Total = 3/6 + 2/6 + 1/6 + 3/6 = 9/6, melebihi asal masalah → aul ke /9. Langkah 2 — gabungkan bagian kakek (1 saham) + saudari (3 saham) = 4 saham, lalu bagi ulang rasio 2:1 → kakek 8/27, saudari 4/27. Tashih akhir menjadi 27: suami 9, ibu 6, kakek 8, saudari 4.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => 27,
                             'aul'          => 9,
                             'baris' => [
-                                ['ahli_waris' => 'suami',              'bagian' => '1/2 (Aul Akdariyah)', 'saham' => 3, 'saham_tashih' => 9],
-                                ['ahli_waris' => 'ibu',                'bagian' => '1/3 (Aul Akdariyah)', 'saham' => 2, 'saham_tashih' => 6],
-                                ['ahli_waris' => 'kakek',              'bagian' => '1/6 (Aul Akdariyah)', 'saham' => 1, 'saham_tashih' => 8],
-                                ['ahli_waris' => 'saudari pr kandung', 'bagian' => '1/2 (Aul Akdariyah)', 'saham' => 3, 'saham_tashih' => 4],
+                                ['ahli_waris' => 'suami',                     'bagian' => '1/2 (Aul Akdariyah)', 'saham' => 3, 'saham_tashih' => 9],
+                                ['ahli_waris' => 'ibu',                       'bagian' => '1/3 (Aul Akdariyah)', 'saham' => 2, 'saham_tashih' => 6],
+                                ['ahli_waris' => 'kakek',                     'bagian' => '1/6 (Aul Akdariyah)', 'saham' => 1, 'saham_tashih' => 8],
+                                ['ahli_waris' => 'saudari perempuan kandung', 'bagian' => '1/2 (Aul Akdariyah)', 'saham' => 3, 'saham_tashih' => 4],
                             ],
                         ],
                     ],
                 ],
                 'urutan' => 18,
             ],
-        
+
             [
                 'nama_ahli_waris'  => 'musytarakah',
                 'kelompok'         => 'Kasus Khusus',
@@ -794,23 +799,23 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Pewaris meninggalkan suami, ibu, 2 saudara seibu, dan 1 saudara laki-laki kandung.',
-                        'solusi'   => 'Suami 1/2, ibu 1/6. Total furudh = 4/6, sisa = 2/6 = 1/3. Saudara seibu normalnya dapat 1/3 dan saudara kandung dapat ashobah — namun ashobah sudah habis. Maka 1/3 dibagi rata antara saudara seibu (2 orang) dan saudara kandung (1 orang) = masing-masing 1/9.',
+                        'solusi'   => 'Suami mendapat 1/2 = 3 saham, ibu 1/6 = 1 saham. Total furudh 4 saham, sisa 2 saham = 1/3. Saudara seibu normalnya berhak 1/3, namun saudara laki-laki kandung protes karena ashobah sudah habis. Maka 1/3 dibagi rata (musytarakah) antara 2 saudara seibu + 1 saudara kandung = 3 orang. Asal masalah 6, sisa 2 tidak bisa dibagi 3 orang, jadi tashih 18; sisa menjadi 6, dibagi 3 = 2 saham tashih masing-masing.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => 18,
                             'baris' => [
-                                ['ahli_waris' => 'suami',           'bagian' => '1/2',                   'saham' => 3, 'saham_tashih' => 9],
-                                ['ahli_waris' => 'ibu',             'bagian' => '1/6',                   'saham' => 1, 'saham_tashih' => 3],
-                                ['ahli_waris' => 'saudara seibu 1', 'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
-                                ['ahli_waris' => 'saudara seibu 2', 'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
-                                ['ahli_waris' => 'saudara lk kand', 'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
+                                ['ahli_waris' => 'suami',                   'bagian' => '1/2',                    'saham' => 3, 'saham_tashih' => 9],
+                                ['ahli_waris' => 'ibu',                     'bagian' => '1/6',                    'saham' => 1, 'saham_tashih' => 3],
+                                ['ahli_waris' => 'saudara seibu 1',         'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
+                                ['ahli_waris' => 'saudara seibu 2',         'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
+                                ['ahli_waris' => 'saudara laki-laki kand',  'bagian' => 'musytarakah (1/3 ÷ 3)', 'saham' => 2, 'saham_tashih' => 2],
                             ],
                         ],
                     ],
                 ],
                 'urutan' => 19,
             ],
-        
+
             [
                 'nama_ahli_waris'  => 'aul',
                 'kelompok'         => 'Kasus Khusus',
@@ -821,41 +826,41 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Suami, ibu, dan 2 anak perempuan (asal masalah 12, total saham 13).',
-                        'solusi'   => 'Suami harusnya 1/4 = 3 saham, ibu 1/6 = 2 saham, 2 anak pr 2/3 = 8 saham. Total = 13 > 12. Aul ke /13, semua dikurangi proporsional.',
+                        'solusi'   => 'Suami harusnya 1/4 = 3 saham, ibu 1/6 = 2 saham, 2 anak perempuan 2/3 = 8 saham (4+4). Total = 17 > 12 → aul. Penyebut dinaikkan menjadi 17. Tiap ahli waris menerima sahamnya dibagi 17 dari total harta.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 12,
                             'tashih'       => null,
                             'aul'          => 13,
                             'baris' => [
-                                ['ahli_waris' => 'suami',      'bagian' => "1/4 ('Aul)", 'saham' => 3, 'saham_tashih' => null],
-                                ['ahli_waris' => 'ibu',        'bagian' => "1/6 ('Aul)", 'saham' => 2, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak pr 1',  'bagian' => "2/3 ('Aul)", 'saham' => 8, 'saham_tashih' => null],
-                                ['ahli_waris' => 'anak pr 2',  'bagian' => "2/3 ('Aul)", 'saham' => 8, 'saham_tashih' => null],
+                                ['ahli_waris' => 'suami',          'bagian' => "1/4 ('Aul)", 'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',            'bagian' => "1/6 ('Aul)", 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan 1','bagian' => "2/3 ('Aul)", 'saham' => 8, 'saham_tashih' => null],
+                                ['ahli_waris' => 'anak perempuan 2','bagian' => "2/3 ('Aul)", 'saham' => 8, 'saham_tashih' => null],
                             ],
-                            'catatan' => "Total saham 13 > asal masalah 12 → penyebut dinaikkan menjadi 13. Tiap ahli waris menerima saham/13 × harta.",
+                            'catatan' => "Total saham 17 > asal masalah 12 → penyebut dinaikkan menjadi 17. Tiap ahli waris menerima saham/17 × harta.",
                         ],
                     ],
                     [
-                        'skenario' => 'Suami, ibu, 2 saudari kandung, dan 1 saudara seibu (asal masalah 6, total saham 8).',
-                        'solusi'   => 'Suami 1/2 = 3, ibu 1/6 = 1, 2 saudari kandung 2/3 = 4, saudara seibu 1/6 = 1. Total = 9 > 6. Aul ke /9.',
+                        'skenario' => 'Suami, ibu, 2 saudari kandung, dan 1 saudara seibu (asal masalah 6, total saham 9).',
+                        'solusi'   => 'Suami 1/2 = 3 saham, ibu 1/6 = 1 saham, 2 saudari kandung 2/3 = 4 saham (2+2), saudara seibu 1/6 = 1 saham. Total = 9 > 6 → aul ke /9. Tiap ahli waris menerima sahamnya dibagi 9 dari total harta.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 6,
                             'tashih'       => null,
                             'aul'          => 9,
                             'baris' => [
-                                ['ahli_waris' => 'suami',         'bagian' => "1/2 ('Aul)", 'saham' => 3, 'saham_tashih' => null],
-                                ['ahli_waris' => 'ibu',           'bagian' => "1/6 ('Aul)", 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudari kand 1','bagian' => "2/3 ('Aul)", 'saham' => 4, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudari kand 2','bagian' => "2/3 ('Aul)", 'saham' => 4, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara seibu', 'bagian' => "1/6 ('Aul)", 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'suami',          'bagian' => "1/2 ('Aul)", 'saham' => 3, 'saham_tashih' => null],
+                                ['ahli_waris' => 'ibu',            'bagian' => "1/6 ('Aul)", 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudari kand 1', 'bagian' => "2/3 ('Aul)", 'saham' => 4, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudari kand 2', 'bagian' => "2/3 ('Aul)", 'saham' => 4, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara seibu',  'bagian' => "1/6 ('Aul)", 'saham' => 1, 'saham_tashih' => null],
                             ],
-                            'catatan' => "Total saham 13 > asal masalah 6 → aul ke /9. Saudari kandung berbagi 4 saham berdua.",
+                            'catatan' => "Total saham 9 > asal masalah 6 → aul ke /9. Saudari kandung berbagi 4 saham berdua.",
                         ],
                     ],
                 ],
                 'urutan' => 20,
             ],
-        
+
             [
                 'nama_ahli_waris'  => 'muqosamah',
                 'kelompok'         => 'Kasus Khusus',
@@ -866,42 +871,42 @@ class EdukasiAhliWarisSeeder extends Seeder
                 'studi_kasus'      => [
                     [
                         'skenario' => 'Kakek dan 1 saudara laki-laki kandung (tanpa ahli waris lain).',
-                        'solusi'   => 'Opsi muqosamah: kakek = 2/(2+2) = 1/2, saudara = 1/2. Opsi 1/3: kakek = 1/3. Muqosamah lebih besar → dipilih.',
+                        'solusi'   => 'Opsi muqosamah: kakek dihitung 2 kepala, saudara 2 kepala → kakek 2/4 = 1/2. Opsi 1/3 harta: kakek = 1/3. Muqosamah (1/2) lebih besar, dipilih. Asal masalah 2: kakek 1 saham, saudara 1 saham.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 2,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'kakek',          'bagian' => 'muqosamah (1/2)', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk kand','bagian' => 'ashobah (sisa)',  'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'kakek',                   'bagian' => 'muqossamah (1/2)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki kand',  'bagian' => 'ashobah (sisa)',   'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Kakek dan 4 saudara laki-laki kandung (tanpa ahli waris lain).',
-                        'solusi'   => 'Opsi muqosamah: kakek = 2/(2+8) = 1/5. Opsi 1/3: kakek = 1/3. 1/3 lebih besar → dipilih.',
+                        'solusi'   => 'Opsi muqosamah: kakek 2 kepala, 4 saudara masing-masing 2 kepala = 10 kepala → kakek 2/10 = 1/5. Opsi 1/3 harta: kakek = 1/3. 1/3 lebih besar, dipilih. Asal masalah 3: kakek 1 saham, sisa 2 saham untuk 4 saudara (perlu tashih).',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 3,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'kakek',            'bagian' => '1/3 (terpilih)', 'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk kand 1','bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk kand 2','bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk kand 3','bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk kand 4','bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'kakek',                     'bagian' => '1/3 (terpilih)', 'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki kand 1',  'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki kand 2',  'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki kand 3',  'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki kand 4',  'bagian' => 'ashobah (sisa)', 'saham' => 2, 'saham_tashih' => null],
                             ],
                         ],
                     ],
                     [
                         'skenario' => 'Kakek, istri, dan 2 saudara laki-laki kandung.',
-                        'solusi'   => 'Istri 1/4 dulu. Sisa = 3/4. Opsi muqosamah: kakek = 2/(2+4) × sisa. Opsi 1/3 sisa: kakek = 1/3 × sisa. Opsi 1/6 total: kakek = 1/6. Pilih yang terbesar.',
+                        'solusi'   => 'Istri mendapat 1/4 = 1 saham lebih dulu. Sisa 3 saham. Opsi muqosamah dari sisa: kakek 2/(2+4) × 3 = 1 saham. Opsi 1/3 sisa: 1/3 × 3 = 1 saham. Opsi 1/6 total: 4 × 1/6 < 1. Muqosamah dan 1/3 sisa setara, pilih salah satu. Asal masalah 4: istri 1, kakek 1, tiap saudara 1.',
                         'tabel_perhitungan' => [
                             'asal_masalah' => 4,
                             'tashih'       => null,
                             'baris' => [
-                                ['ahli_waris' => 'istri',            'bagian' => '1/4',             'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'kakek',            'bagian' => '1/3 sisa',        'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk kand 1','bagian' => 'ashobah (sisa)',  'saham' => 1, 'saham_tashih' => null],
-                                ['ahli_waris' => 'saudara lk kand 2','bagian' => 'ashobah (sisa)',  'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'istri',                    'bagian' => '1/4',             'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'kakek',                    'bagian' => '1/3 sisa',        'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki kand 1', 'bagian' => 'ashobah (sisa)',  'saham' => 1, 'saham_tashih' => null],
+                                ['ahli_waris' => 'saudara laki-laki kand 2', 'bagian' => 'ashobah (sisa)',  'saham' => 1, 'saham_tashih' => null],
                             ],
                         ],
                     ],
@@ -915,14 +920,14 @@ class EdukasiAhliWarisSeeder extends Seeder
             EdukasiAhliWaris::updateOrCreate(
                 ['nama_ahli_waris' => $item['nama_ahli_waris']],
                 [
-                    'slug'              => Str::slug($item['nama_ahli_waris']),
-                    'kelompok'          => $item['kelompok'],
-                    'deskripsi_aturan'  => $item['deskripsi_aturan'],
-                    'dalil_arab'        => $item['dalil_arab'],
-                    'dalil_terjemahan'  => $item['dalil_terjemahan'],
-                    'hijab_oleh'        => $item['hijab_oleh'],
-                    'studi_kasus'       => $item['studi_kasus'],
-                    'urutan'            => $item['urutan'],
+                    'slug'             => Str::slug($item['nama_ahli_waris']),
+                    'kelompok'         => $item['kelompok'],
+                    'deskripsi_aturan' => $item['deskripsi_aturan'],
+                    'dalil_arab'       => $item['dalil_arab'],
+                    'dalil_terjemahan' => $item['dalil_terjemahan'],
+                    'hijab_oleh'       => $item['hijab_oleh'],
+                    'studi_kasus'      => $item['studi_kasus'],
+                    'urutan'           => $item['urutan'],
                 ]
             );
         }

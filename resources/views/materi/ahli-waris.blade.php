@@ -85,9 +85,7 @@
         </div>
         @endif
 
-        {{-- ================================================== --}}
         {{-- STUDI KASUS --}}
-        {{-- ================================================== --}}
         @if($ahliWaris->studi_kasus && is_array($ahliWaris->studi_kasus) && count($ahliWaris->studi_kasus) > 0)
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -114,85 +112,135 @@
                         $tabel     = $kasus['tabel_perhitungan'];
                         $hasTashih = !empty($tabel['tashih']);
 
-                        // Hitung total saham & sisa/radd
                         $totalSaham = collect($tabel['baris'])->sum(fn($b) => (int)($b['saham'] ?? 0));
                         $totalSahamTashih = $hasTashih
                             ? collect($tabel['baris'])->sum(fn($b) => (int)($b['saham_tashih'] ?? 0))
                             : null;
 
-                        $asalAktif = $hasTashih ? $tabel['tashih'] : $tabel['asal_masalah'];
+                        $asalAktif  = $hasTashih ? $tabel['tashih'] : $tabel['asal_masalah'];
                         $totalAktif = $hasTashih ? $totalSahamTashih : $totalSaham;
-                        $sisaHarta = $asalAktif - $totalAktif;
+                        $sisaHarta  = $asalAktif - $totalAktif;
                     @endphp
                     <div class="px-4 pt-4 pb-2">
+
+                        {{-- ① Info Asal Masalah + Tashih DI ATAS tabel --}}
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="text-center">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Asal Masalah</p>
+                                <p class="text-xl font-black text-gray-700">{{ $tabel['asal_masalah'] }}</p>
+                            </div>
+                            @if($hasTashih)
+                            <div class="w-px h-8 bg-gray-200"></div>
+                            <div class="text-center">
+                                <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Tashih</p>
+                                <p class="text-xl font-black text-blue-600">{{ $tabel['tashih'] }}</p>
+                            </div>
+                            @endif
+                        </div>
+
+                        {{-- ② Tabel ahli waris (tanpa thead asal masalah) --}}
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm border-collapse">
-                                {{-- Baris asal masalah --}}
                                 <thead>
                                     <tr class="bg-gray-50 border border-gray-200">
-                                        <td class="px-3 py-2 text-xs font-black text-gray-500 uppercase tracking-wider border-r border-gray-200 w-1/3">
-                                            Asal Masalah
-                                        </td>
-                                        <td class="px-3 py-2 text-center font-bold text-gray-700 border-r border-gray-200">
-                                            {{ $tabel['asal_masalah'] }}
-                                        </td>
+                                        <th class="px-3 py-2 text-left text-xs font-black text-gray-500 uppercase tracking-wider border-r border-gray-200 w-1/3">
+                                            Ahli Waris
+                                        </th>
+                                        <th class="px-3 py-2 text-center text-xs font-black text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                                            Bagian
+                                        </th>
                                         @if($hasTashih)
-                                        <td class="px-3 py-2 text-center font-bold text-blue-600">
-                                            {{ $tabel['tashih'] }}
-                                        </td>
+                                        <th class="px-3 py-2 text-center text-xs font-black text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                                            Saham
+                                        </th>
+                                        <th class="px-3 py-2 text-center text-xs font-black text-blue-400 uppercase tracking-wider">
+                                            Saham Tashih
+                                        </th>
                                         @else
-                                        <td class="px-3 py-2"></td>
+                                        <th class="px-3 py-2 text-center text-xs font-black text-gray-500 uppercase tracking-wider">
+                                            Saham
+                                        </th>
                                         @endif
                                     </tr>
                                 </thead>
-
-                                {{-- Spacer --}}
                                 <tbody>
-                                    <tr><td colspan="{{ $hasTashih ? 3 : 3 }}" class="py-1"></td></tr>
-
-                                    {{-- Baris tiap ahli waris --}}
-                                    @foreach($tabel['baris'] as $baris)
                                     @php
-                                        $isMahjub = strtolower($baris['bagian']) === 'mahjub';
+                                        // Grouping baris berdasarkan bagian ashobah
+                                        $grouped = [];
+                                        foreach ($tabel['baris'] as $baris) {
+                                            $bagian = strtolower($baris['bagian'] ?? '');
+                                            $isAshobah = str_contains($bagian, 'ashobah');
+                                            
+                                            if ($isAshobah) {
+                                                $key = $baris['bagian']; // group by bagian label
+                                                $grouped[$key][] = $baris;
+                                            } else {
+                                                $grouped['__solo_' . $baris['ahli_waris']] = [$baris];
+                                            }
+                                        }
                                     @endphp
-                                    <tr class="border border-gray-200 {{ $isMahjub ? 'opacity-50' : '' }}">
-                                        <td class="px-3 py-2 capitalize font-semibold text-gray-700 border-r border-gray-200">
-                                            {{ $baris['ahli_waris'] }}
-                                        </td>
-                                        <td class="px-3 py-2 text-center text-gray-600 border-r border-gray-200">
-                                            @if($isMahjub)
-                                                <span class="px-2 py-0.5 bg-rose-50 text-rose-500 text-xs font-bold rounded-lg border border-rose-100">
-                                                    Terhalang
-                                                </span>
-                                            @else
-                                                {{ $baris['bagian'] }}
+
+                                    @foreach($grouped as $key => $group)
+                                        @php
+                                            $isAshobahGroup = !str_starts_with($key, '__solo_');
+                                            $groupCount = count($group);
+                                            $totalSahamGroup = collect($group)->sum(fn($b) => (int)($b['saham'] ?? 0));
+                                        @endphp
+
+                                        @foreach($group as $i => $baris)
+                                        @php
+                                            $isMahjub = strtolower($baris['bagian']) === 'mahjub';
+                                            $isFirst  = $i === 0;
+                                        @endphp
+                                        <tr class="border border-gray-200 {{ $isMahjub ? 'opacity-50' : '' }}">
+
+                                            {{-- Kolom Ahli Waris: selalu per baris --}}
+                                            <td class="px-3 py-2 capitalize font-semibold text-gray-700 border-r border-gray-200">
+                                                {{ $baris['ahli_waris'] }}
+                                            </td>
+
+                                            {{-- Kolom Bagian: rowspan kalau ashobah group --}}
+                                            @if($isFirst)
+                                            <td class="px-3 py-2 text-center text-gray-600 border-r border-gray-200"
+                                                @if($isAshobahGroup && $groupCount > 1) rowspan="{{ $groupCount }}" @endif>
+                                                @if($isMahjub)
+                                                    <span class="px-2 py-0.5 bg-rose-50 text-rose-500 text-xs font-bold rounded-lg border border-rose-100">
+                                                        Terhalang
+                                                    </span>
+                                                @else
+                                                    {{ $baris['bagian'] }}
+                                                @endif
+                                            </td>
                                             @endif
-                                        </td>
-                                        @if($hasTashih)
-                                        <td class="px-3 py-2 text-center font-bold text-gray-700 border-r border-gray-200">
-                                            @if(!$isMahjub && $baris['saham'] > 0)
-                                                {{ $baris['saham'] }}
+
+                                            {{-- Kolom Saham & Saham Tashih: selalu per baris --}}
+                                            @if($hasTashih)
+                                            <td class="px-3 py-2 text-center font-bold text-gray-700 border-r border-gray-200">
+                                                @if(!$isMahjub && $baris['saham'] > 0)
+                                                    {{ $baris['saham'] }}
+                                                @else
+                                                    —
+                                                @endif
+                                            </td>
+                                            <td class="px-3 py-2 text-center font-bold text-blue-600">
+                                                @if(!$isMahjub && isset($baris['saham_tashih']) && $baris['saham_tashih'] !== null)
+                                                    {{ $baris['saham_tashih'] }}
+                                                @else
+                                                    —
+                                                @endif
+                                            </td>
                                             @else
-                                                —
+                                            <td class="px-3 py-2 text-center font-bold text-gray-700">
+                                                @if(!$isMahjub && $baris['saham'] > 0)
+                                                    {{ $baris['saham'] }}
+                                                @else
+                                                    —
+                                                @endif
+                                            </td>
                                             @endif
-                                        </td>
-                                        <td class="px-3 py-2 text-center font-bold text-blue-600">
-                                            @if(!$isMahjub && isset($baris['saham_tashih']) && $baris['saham_tashih'] !== null)
-                                                {{ $baris['saham_tashih'] }}
-                                            @else
-                                                —
-                                            @endif
-                                        </td>
-                                        @else
-                                        <td class="px-3 py-2 text-center font-bold text-gray-700">
-                                            @if(!$isMahjub && $baris['saham'] > 0)
-                                                {{ $baris['saham'] }}
-                                            @else
-                                                —
-                                            @endif
-                                        </td>
-                                        @endif
-                                    </tr>
+
+                                        </tr>
+                                        @endforeach
                                     @endforeach
                                 </tbody>
                             </table>
