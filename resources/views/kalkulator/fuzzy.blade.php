@@ -18,30 +18,36 @@
         {{-- ================================================== --}}
         {{-- INFO BOX --}}
         {{-- ================================================== --}}
-        <div class="bg-blue-50 border border-blue-100 rounded-2xl p-5">
-            <div class="flex gap-4">
-                <div class="bg-blue-500 p-2 rounded-xl h-fit shadow-sm">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-black text-blue-900 text-sm mb-1">Mengenal Islah Ekonomi</h4>
-                    <p class="text-blue-700 text-xs leading-relaxed">
-                        Sistem menggunakan logika <strong>Fuzzy Mamdani</strong> untuk memberikan rekomendasi
-                        pembagian berdasarkan tingkat kebutuhan nyata — usia, penghasilan, dan aset yang dimiliki.
-                        Fitur ini hanya aktif jika seluruh ahli waris sepakat.
-                    </p>
-                </div>
-            </div>
-        </div>
+        <div class="bg-yellow-50 border border-yellow-300 rounded-xl p-4 flex gap-3 items-start">
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
+			</svg>
+			<div>
+				<h4 class="font-semibold text-yellow-800 text-sm mb-1">Mengenal Islah Ekonomi</h4>
+				<p class="text-yellow-700 text-xs leading-relaxed">
+					Sistem menggunakan logika <strong>Fuzzy Mamdani</strong> untuk memberikan rekomendasi
+                    pembagian berdasarkan tingkat ekonomi Ahli Waris. Variabel yang digunakan meliputi usia, penghasilan, dan aset yang dimiliki.
+                    Fitur ini hanya bersifat <strong>rekomendasi</strong>, 
+                    adapun pembagian final tetap berdasarkan kesepakatan bersama semua ahli waris.
+				</p>
+			</div>
+		</div>
 
         {{-- ================================================== --}}
         {{-- FORM --}}
         {{-- ================================================== --}}
         <form action="{{ route('kalkulator.hitung-fuzzy') }}" method="POST" @submit="prepareSubmit()">
             @csrf
+            
+            @if($errors->any())
+                <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                    <ul class="text-xs text-red-600 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <div class="space-y-4">
                 @php $index = 0; @endphp
@@ -108,6 +114,7 @@
                                     </div>
                                     <div class="flex justify-between text-[9px] font-bold uppercase">
                                         <span class="text-rose-400">Rendah &lt; 3jt</span>
+                                        <span class="text-yellow-500">Sedang 3 – 6 jt</span>
                                         <span class="text-emerald-400">Tinggi &gt; 6jt</span>
                                     </div>
                                 </div>
@@ -125,6 +132,7 @@
                                            class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition">
                                     <div class="flex justify-between text-[9px] font-bold uppercase text-gray-400">
                                         <span>Muda &lt; 25</span>
+                                        <span class="text-gray-500">Dewasa 25 – 55</span>
                                         <span>Tua &gt; 55</span>
                                     </div>
                                 </div>
@@ -148,8 +156,9 @@
                                                value="0">
                                     </div>
                                     <div class="flex justify-between text-[9px] font-bold uppercase">
-                                        <span class="text-blue-400">Kecil &lt; 250jt</span>
-                                        <span class="text-rose-400">Besar &gt; 1.2M</span>
+                                        <span class="text-blue-400">Sedikit &lt; 250jt</span>
+                                        <span class="text-yellow-500">Sedang 250jt – 1.5M</span>
+                                        <span class="text-rose-400">Banyak &gt; 1.2M</span>
                                     </div>
                                 </div>
 
@@ -190,12 +199,12 @@
         {{-- ================================================== --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pb-6">
             @foreach([
-                ['title' => 'Penghasilan', 'color' => 'blue',    'image' => 'penghasilan.png',
-                 'desc'  => 'Prioritas diberikan kepada ahli waris dengan penghasilan di bawah UMK Jember (Rp 3.012.197).'],
+                ['title' => 'Penghasilan', 'color' => 'blue', 'image' => 'penghasilan.png',
+                 'desc'  => 'Prioritas diberikan kepada ahli waris dengan penghasilan rendah. Zona overlap Rendah–Sedang di Rp 3 jt – 6 jt. Zona Tinggi mulai dari Rp 6 jt.'],
                 ['title' => 'Faktor Usia', 'color' => 'emerald', 'image' => 'umur.png',
-                 'desc'  => 'Usia di bawah 25 tahun (belum produktif) atau di atas 55 tahun (tidak produktif) mendapat bobot lebih tinggi.'],
-                ['title' => 'Aset Pribadi', 'color' => 'rose',   'image' => 'aset.png',
-                 'desc'  => 'Aset di bawah Rp 250 juta dianggap sedikit. Di atas Rp 1,2 miliar dianggap banyak.'],
+                 'desc'  => 'Usia Muda (< 20 tahun) dan Tua (> 55 tahun) mendapat bobot kebutuhan lebih tinggi. Usia Dewasa produktif antara 20 – 60 tahun (referensi BPS).'],
+                ['title' => 'Aset Pribadi', 'color' => 'rose', 'image' => 'aset.png',
+                 'desc'  => 'Aset Sedikit di bawah Rp 250 juta. Aset Sedang antara Rp 250 juta – 1,5 miliar. Aset Banyak di atas Rp 1,2 miliar (referensi World Bank, LPS).'],
             ] as $info)
             <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
                 <div class="w-10 h-10 bg-{{ $info['color'] }}-50 rounded-xl flex items-center justify-center mb-3 overflow-hidden">

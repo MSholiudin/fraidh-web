@@ -207,7 +207,7 @@
         <div class="org-sub">Kalkulator Pembagian Waris Islam</div>
       </td>
       <td class="header-right" style="width:40%">
-        <div class="doc-date">{{ $kasus->created_at->translatedFormat('d F Y, H:i') }}</div>
+        <div class="doc-date">{{ $kasus->created_at->translatedFormat('d F Y') }}</div>
       </td>
     </tr>
   </table>

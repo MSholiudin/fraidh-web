@@ -15,7 +15,9 @@
                     <div class="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500">
                         <span>Pewaris: <strong class="text-gray-800">{{ $namaMayit }}</strong></span>
                         <span class="text-gray-300">|</span>
-                        <span>Harta Bersih: <strong class="text-emerald-600">Rp {{ number_format($hartaBersih, 0, ',', '.') }}</strong></span>
+                        <span>Harta Asal: <strong class="text-gray-800">Rp {{ number_format($hartaBersih, 0, ',', '.') }}</strong></span>
+                        <span class="text-gray-300">|</span>
+                        <span>Hak Ahli Waris: <strong class="text-emerald-600">Rp {{ number_format($hartaAhliWaris, 0, ',', '.') }}</strong></span>
                     </div>
                 </div>
                 <div class="flex gap-3">
@@ -116,7 +118,7 @@
                         <tr class="bg-gray-50 border-t border-gray-200">
                             <td colspan="2" class="px-6 py-3 text-xs font-black text-gray-400 uppercase">Total</td>
                             <td class="px-6 py-3 text-right font-black text-gray-700 tabular-nums text-sm">
-                                Rp {{ number_format($hartaBersih, 0, ',', '.') }}
+                                Rp {{ number_format($total_faraidh, 0, ',', '.') }}
                             </td>
                             <td class="px-6 py-3 text-right font-black text-purple-700 tabular-nums text-sm">
                                 Rp {{ number_format($total_islah, 0, ',', '.') }}
@@ -133,7 +135,7 @@
             <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
                 <span class="w-1 h-5 bg-blue-500 rounded-full"></span>
                 <h2 class="font-black text-gray-800 uppercase tracking-tight text-sm">Mengapa Bobot Ini?</h2>
-                <span class="text-xs text-gray-400 font-medium">— Penjelasan per ahli waris</span>
+                <span class="text-xs text-gray-400 font-medium">Penjelasan per ahli waris</span>
             </div>
 
             <div class="divide-y divide-gray-50">
@@ -150,14 +152,14 @@
                     else                         $labelP = ['Tinggi', 'text-emerald-600', 'bg-emerald-50'];
 
                     // Label linguistik usia
-                    if ($usia < 25)              $labelU = ['Muda',   'text-blue-600',   'bg-blue-50'];
-                    elseif ($usia <= 55)         $labelU = ['Dewasa', 'text-indigo-600', 'bg-indigo-50'];
-                    else                         $labelU = ['Tua',    'text-purple-600', 'bg-purple-50'];
+                    if ($usia < 25)          $labelU = ['Muda',   'text-blue-600',   'bg-blue-50'];
+                    elseif ($usia <= 60)     $labelU = ['Dewasa', 'text-indigo-600', 'bg-indigo-50'];
+                    else                     $labelU = ['Tua',    'text-purple-600', 'bg-purple-50'];
 
                     // Label linguistik aset
-                    if ($aset < 250000000)       $labelA = ['Sedikit', 'text-rose-600',    'bg-rose-50'];
-                    elseif ($aset <= 1200000000) $labelA = ['Sedang',  'text-amber-600',   'bg-amber-50'];
-                    else                         $labelA = ['Banyak',  'text-emerald-600', 'bg-emerald-50'];
+                    if ($aset < 250000000)         $labelA = ['Sedikit', 'text-rose-600',    'bg-rose-50'];
+                    elseif ($aset <= 1500000000)   $labelA = ['Sedang',  'text-amber-600',   'bg-amber-50'];
+                    else                           $labelA = ['Banyak',  'text-emerald-600', 'bg-emerald-50'];
 
                     // Penjelasan naratif
                     $naratif = "Berdasarkan profil ekonomi, ";
@@ -227,25 +229,28 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {{-- Panduan --}}
-            <div class="bg-gray-900 rounded-2xl p-6 text-white">
-                <h3 class="font-black text-sm uppercase tracking-widest mb-4 text-gray-400">Panduan Musyawarah</h3>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
+                    <span class="w-1 h-5 bg-emerald-500 rounded-full"></span>
+                    <h3 class="font-black text-gray-800 uppercase tracking-tight text-sm">Panduan Musyawarah</h3>
+                </div>
                 <div class="space-y-3">
-                    <div class="flex gap-3 p-3 bg-gray-800 rounded-xl">
-                        <span class="text-emerald-400 font-black text-lg leading-none">1</span>
-                        <p class="text-xs text-gray-300 leading-relaxed">
-                            Faraidh adalah <strong class="text-white">kewajiban syariat</strong> yang harus diselesaikan terlebih dahulu sebelum musyawarah.
+                    <div class="flex gap-3 p-3 bg-gray-50 rounded-xl">
+                        <span class="text-emerald-500 font-black text-lg leading-none">1</span>
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Faraidh adalah <strong class="text-gray-800">kewajiban syariat</strong> yang harus diselesaikan terlebih dahulu sebelum musyawarah.
                         </p>
                     </div>
-                    <div class="flex gap-3 p-3 bg-gray-800 rounded-xl">
-                        <span class="text-emerald-400 font-black text-lg leading-none">2</span>
-                        <p class="text-xs text-gray-300 leading-relaxed">
-                            Islah hanya bisa dilakukan jika <strong class="text-white">semua ahli waris setuju</strong> secara sukarela tanpa paksaan.
+                    <div class="flex gap-3 p-3 bg-gray-50 rounded-xl">
+                        <span class="text-emerald-500 font-black text-lg leading-none">2</span>
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Islah hanya bisa dilakukan jika <strong class="text-gray-800">semua ahli waris setuju</strong> secara sukarela tanpa paksaan.
                         </p>
                     </div>
-                    <div class="flex gap-3 p-3 bg-gray-800 rounded-xl">
-                        <span class="text-emerald-400 font-black text-lg leading-none">3</span>
-                        <p class="text-xs text-gray-300 leading-relaxed">
-                            Ahli waris dengan bobot <strong class="text-white">lebih tinggi</strong> adalah yang paling membutuhkan dukungan ekonomi saat ini.
+                    <div class="flex gap-3 p-3 bg-gray-50 rounded-xl">
+                        <span class="text-emerald-500 font-black text-lg leading-none">3</span>
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Ahli waris dengan bobot <strong class="text-gray-800">lebih tinggi</strong> adalah yang paling membutuhkan dukungan ekonomi saat ini.
                         </p>
                     </div>
                 </div>
@@ -276,20 +281,50 @@
                 Hitung Ulang
             </a>
 
-            @auth
-            <form action="{{ route('riwayat.simpan') }}" method="POST">
-                @csrf
-                <button type="submit"
-                        class="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold text-sm hover:bg-purple-700 transition-all shadow-sm shadow-purple-200 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-                    </svg>
-                    Simpan ke Riwayat
-                </button>
-            </form>
-            @endauth
+           @auth
+            <button type="button"
+                    onclick="prosesSimpan(this)"
+                    class="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold text-sm hover:bg-purple-700 transition-all shadow-sm shadow-purple-200 flex items-center gap-2 active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                </svg>
+                <span class="btn-text">Simpan ke Riwayat</span>
+            </button>
+        @endauth
         </div>
 
     </div>
 </div>
+
+<script>
+function prosesSimpan(button) {
+    const textSpan = button.querySelector('.btn-text');
+    const originalText = textSpan.innerText;
+    button.disabled = true;
+    textSpan.innerText = 'Menyimpan...';
+    fetch("{{ route('riwayat.simpan') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+        } else {
+            alert("Gagal: " + data.message);
+        }
+    })
+    .catch(error => {
+        alert("Terjadi kesalahan koneksi atau server.");
+    })
+    .finally(() => {
+        button.disabled = false;
+        textSpan.innerText = originalText;
+    });
+}
+</script>
 @endsection

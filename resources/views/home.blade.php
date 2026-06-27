@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Beranda — WEWARIS')
+@section('title', 'Beranda - WEWARIS')
 
 @section('content')
 <div class="bg-gray-50 min-h-screen">
@@ -43,14 +43,14 @@
 
         {{-- Ayat --}}
         <div class="relative z-10 max-w-5xl mx-auto px-6 pb-10">
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 max-w-2xl">
-                <p class="text-right text-lg leading-loose text-white mb-2 font-['Amiri']" dir="rtl">
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 max-w-2xl text-center">
+                <p class="text-blue-300 text-[10px] font-black uppercase tracking-widest mb-3">QS. An-Nisa' : 11</p>
+                <p class="text-lg leading-loose text-white mb-3 font-['Amiri']" dir="rtl">
                     "يُوصِيكُمُ ٱللَّهُ فِىٓ أَوْلَـٰدِكُمْ ۖ لِلذَّكَرِ مِثْلُ حَظِّ ٱلْأُنثَيَيْنِ"
                 </p>
                 <p class="text-blue-100 text-xs italic leading-relaxed">
                     "Allah mensyariatkan bagimu tentang pembagian pusaka untuk anak-anakmu. Bagian seorang anak laki-laki sama dengan bagian dua orang anak perempuan..."
                 </p>
-                <p class="text-blue-300 text-[10px] font-black uppercase tracking-widest mt-2">QS. An-Nisa' : 11</p>
             </div>
         </div>
     </div>
@@ -152,7 +152,7 @@
                     </a>
                     <a href="{{ route('register') }}"
                        class="px-5 py-2.5 bg-white text-blue-600 font-black rounded-xl text-sm hover:bg-blue-50 transition-all shadow-lg">
-                        Daftar Gratis
+                        Daftar
                     </a>
                 </div>
             </div>

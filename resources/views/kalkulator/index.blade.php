@@ -30,13 +30,13 @@
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
                     <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center">1</span>
-                    <h2 class="font-black text-gray-800 text-sm uppercase tracking-tight">Data Pewaris</h2>
+                    <h2 class="font-black text-gray-800 text-sm uppercase tracking-tight">Data Almarhum / Almarhumah</h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
-                                Nama Pewaris <span class="text-rose-500">*</span>
+                                Nama Almarhum / Almarhumah <span class="text-rose-500">*</span>
                             </label>
                             <input type="text" name="nama_mayit" required
                                    placeholder="Nama almarhum/almarhumah"
@@ -83,7 +83,9 @@
                                 <input type="text"
                                        name="{{ $name }}"
                                        @if($field['required']) required @endif
+                                       @focus="if ($event.target.value === '0') $event.target.value = ''"
                                        @input="formatCurrency($event.target)"
+                                       @blur="if ($event.target.value === '') $event.target.value = '0'"
                                        value="{{ $name === 'total_harta' ? '' : '0' }}"
                                        placeholder="{{ $field['placeholder'] }}"
                                        class="input-currency w-full pl-14 pr-4 py-3 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition">

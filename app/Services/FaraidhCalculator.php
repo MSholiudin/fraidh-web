@@ -212,8 +212,16 @@ class FaraidhCalculator
                 break;
 
             case $hub === 'bapak':
-                $porsi = 1/6;
-                $label = ($f['has_anak_lk'] || $f['has_cucu_lk']) ? "1/6" : "1/6 + Ashobah Binafsihi";
+                if ($f['has_anak_lk'] || $f['has_cucu_lk']) {
+                    $porsi = 1/6;
+                    $label = "1/6";
+                } elseif ($f['has_anak'] || $f['has_cucu']) {
+                    $porsi = 1/6;
+                    $label = "1/6 + Ashobah Binafsihi";
+                } else {
+                    $porsi = 0;
+                    $label = "Ashobah Binafsihi";
+                }
                 break;
 
             case $hub === 'anak laki-laki':
@@ -556,7 +564,9 @@ class FaraidhCalculator
             foreach ($hasil_faraidh as &$res) {
                 if ($res['hubungan'] === 'bapak') {
                     $res['nominal'] += $sisa;
-                    $res['label']   = "1/6 + Ashobah Binafsihi";
+                    $res['label'] = ($f['has_anak'] || $f['has_cucu'])
+                        ? "1/6 + Ashobah Binafsihi"
+                        : "Ashobah Binafsihi";
                     break;
                 }
             }

@@ -52,9 +52,9 @@
                     @foreach([
                         ['href' => '#pengertian', 'label' => 'Pengertian Faraidh'],
                         ['href' => '#dalil',      'label' => 'Dalil'],
+                        ['href' => '#ahliwaris',  'label' => 'Aturan Pembagian Ahli Waris'],
                         ['href' => '#istilah',    'label' => 'Istilah Penting'],
                         ['href' => '#rukun',      'label' => 'Rukun Waris'],
-                        ['href' => '#ahliwaris',  'label' => 'Skema Ahli Waris'],
                     ] as $nav)
                     <a href="{{ $nav['href'] }}"
                     @click="if(window.innerWidth < 1024) sidebarOpen = false"
@@ -109,7 +109,6 @@
         </div>
 
         <div class="max-w-4xl mx-auto px-6 py-8 space-y-8">
-            {{-- PAGE TITLE - tambahin ini di paling atas --}}
             <div class="pb-4 border-b border-gray-100 text-center">
                 <h1 class="text-3xl font-black text-gray-900">Materi Faraidh</h1>
                 <p class="text-sm text-gray-400 mt-1">Pelajari dasar-dasar ilmu waris Islam</p>
@@ -130,14 +129,6 @@
                     <p class="text-gray-600 leading-relaxed text-sm">{{ $item->konten }}</p>
                 </div>
                 @endforeach
-
-                {{-- Hadis box --}}
-                <div class="mt-6 p-5 bg-blue-50 border-l-4 border-blue-500 rounded-r-2xl">
-                    <p class="text-blue-800 text-sm italic leading-relaxed">
-                        "Pelajarilah Al-Qur'an dan ajarkanlah kepada orang-orang, pelajarilah ilmu faraidh dan ajarkanlah..."
-                    </p>
-                    <p class="text-blue-500 text-xs font-bold mt-2">HR. Tirmidzi & Nasa'i</p>
-                </div>
             </section>
 
             {{-- ============================================ --}}
@@ -164,7 +155,8 @@
                                 $indo  = $parts[1] ?? '';
                             @endphp
                             @if($arab)
-                            <p class="text-right text-xl leading-loose text-gray-800 mb-4 font-arabic" dir="rtl">
+                            <p class="text-right text-2xl leading-loose text-gray-800 mb-4" 
+   								style="font-family: 'Amiri', serif;" dir="rtl">
                                 {{ $arab }}
                             </p>
                             @endif
@@ -173,6 +165,56 @@
                                 {{ $indo }}
                             </p>
                             @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </section>
+
+            {{-- ============================================ --}}
+            {{-- SKEMA AHLI WARIS --}}
+            {{-- ============================================ --}}
+            <section id="ahliwaris" class="scroll-mt-20">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="w-1 h-6 bg-rose-500 rounded-full"></span>
+                    <h2 class="text-2xl font-black text-gray-900">Aturan Pembagian Ahli Waris</h2>
+                </div>
+                <p class="text-sm text-gray-500 mb-6 ml-4">
+                    Daftar aturan pembagian masing-masing ahli waris berdasarkan kelompoknya.
+                </p>
+
+                {{-- Grid Card Ahli Waris per Kelompok --}}
+                <div class="mt-8 space-y-6">
+                    @foreach($ahliWaris as $kelompok => $list)
+                    <div>
+                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{{ $kelompok }}</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            @foreach($list as $ahli)
+                            <a href="{{ route('materi.ahli-waris', $ahli->slug) }}"
+                            class="flex flex-col gap-2 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-blue-400 hover:shadow-md transition-all group">
+                                
+                                {{-- Baris atas: icon + nama --}}
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 group-hover:bg-blue-100 shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-bold text-gray-800 capitalize truncate">{{ $ahli->nama_ahli_waris }}</p>
+                                </div>
+
+                                {{-- Deskripsi --}}
+                                <p class="text-xs text-gray-400 leading-relaxed line-clamp-2">{{ Str::limit($ahli->deskripsi_aturan, 60) }}</p>
+
+                                {{-- CTA eksplisit --}}
+                                <div class="flex items-center gap-1 text-xs font-bold text-blue-500 group-hover:text-blue-700 transition-colors mt-auto">
+                                    <span>Lihat aturan lengkap</span>
+                                    <svg class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </a>
+                            @endforeach
                         </div>
                     </div>
                     @endforeach
@@ -217,47 +259,6 @@
                             {{ $item->judul }}
                         </h3>
                         <p class="text-xs text-gray-600 leading-relaxed">{{ $item->konten }}</p>
-                    </div>
-                    @endforeach
-                </div>
-            </section>
-
-            {{-- ============================================ --}}
-            {{-- SKEMA AHLI WARIS --}}
-            {{-- ============================================ --}}
-            <section id="ahliwaris" class="scroll-mt-20">
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="w-1 h-6 bg-rose-500 rounded-full"></span>
-                    <h2 class="text-2xl font-black text-gray-900">Skema Ahli Waris</h2>
-                </div>
-                <p class="text-sm text-gray-500 mb-6 ml-4">
-                    Daftar aturan pembagian masing-masing ahli waris berdasarkan kelompoknya.
-                </p>
-
-                {{-- Grid Card Ahli Waris per Kelompok --}}
-                <div class="mt-8 space-y-6">
-                    @foreach($ahliWaris as $kelompok => $list)
-                    <div>
-                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{{ $kelompok }}</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                            @foreach($list as $ahli)
-                            <a href="{{ route('materi.ahli-waris', $ahli->slug) }}"
-                               class="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-blue-300 hover:shadow-md transition-all group">
-                                <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 group-hover:bg-blue-100 shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                    </svg>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-sm font-bold text-gray-800 capitalize truncate">{{ $ahli->nama_ahli_waris }}</p>
-                                    <p class="text-xs text-gray-400 truncate">{{ Str::limit($ahli->deskripsi_aturan, 50) }}</p>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-300 group-hover:text-blue-400 shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </a>
-                            @endforeach
-                        </div>
                     </div>
                     @endforeach
                 </div>

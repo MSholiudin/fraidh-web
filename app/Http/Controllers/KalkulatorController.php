@@ -313,6 +313,9 @@ class KalkulatorController extends Controller
         $index = 0;
         
         foreach ($hasilFaraidh as $item) {
+            if ($item['hubungan'] === 'catatan') continue;
+    		if (Str::contains(strtolower($item['hubungan']), ['baitul maal', 'sabilillah'])) continue;
+
             $jumlah = $item['jumlah'];
 
             for ($i = 0; $i < $jumlah; $i++) {
@@ -340,8 +343,10 @@ class KalkulatorController extends Controller
         }
         
         // 2. Hitung distribusi islah menggunakan Fuzzy Mamdani
-        $hasilIslah = FuzzyMamdaniService::calculate_islah(
-            $faraidhData['harta_bersih'],
+        $hartaAhliWaris = array_sum(array_column($ahliWarisData, 'faraidh'));
+
+        $hasilIslah = FuzzyMamdaniService::hitungIslah(
+            $hartaAhliWaris,
             $ahliWarisData
         );
         
@@ -398,6 +403,7 @@ class KalkulatorController extends Controller
             'islah' => $hasilIslahGrouped,
             'islah_detail' => $hasilIslah['hasil_islah'],
             'hartaBersih' => $faraidhData['harta_bersih'],
+            'hartaAhliWaris' => $hartaAhliWaris,
             'namaMayit' => $faraidhData['nama_mayit'],
             'total_faraidh' => array_sum(array_column($hasilFaraidh, 'nominal')),
             'total_islah' => $hasilIslah['total_islah']

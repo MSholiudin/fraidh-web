@@ -18,14 +18,6 @@
                         <span>Harta Bersih: <strong class="text-emerald-600">Rp {{ number_format($hartaBersih, 0, ',', '.') }}</strong></span>
                     </div>
                 </div>
-                <div class="flex gap-3">
-                    <form action="{{ route('kalkulator.fuzzy') }}" method="GET">
-                        <button type="submit"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm shadow-blue-200">
-                            Islah Ekonomi →
-                        </button>
-                    </form>
-                </div>
             </div>
         </div>
 
@@ -138,7 +130,8 @@
                 $isGharrawain = $detailPerhitungan['is_gharrawain'] ?? false;
                 $isMuqosamah  = $detailPerhitungan['is_muqosamah']  ?? false;
 
-                $adaTashih = !is_null($tashih) || !is_null($aulTashih);
+                $adaTashih    = !is_null($tashih) || !is_null($aulTashih);
+                $adaSahamAwal = $adaTashih || collect($items)->contains(fn($i) => ($i['jumlah'] ?? 1) > 1);
 
                 $isAshobahLabel = fn($b) => str_contains(strtolower($b ?? ''), 'ashobah')
                                         || str_contains(strtolower($b ?? ''), 'musytarakah');
@@ -159,25 +152,27 @@
             @endphp
 
             {{-- ===================== HEADER ANGKA ===================== --}}
-            <div class="p-6 border-b bg-gray-50">
-                <div class="flex flex-wrap gap-8">
+           <div class="p-6 border-b bg-gray-50">
+                <div class="flex flex-wrap items-end gap-4 mb-3">
 
-                    <div>
-                        <p class="text-sm text-gray-500">Asal Masalah</p>
-                        <p class="text-4xl font-bold text-blue-600">{{ $asalMasalah ?? '-' }}</p>
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Asal Masalah</p>
+                        <p class="text-4xl font-black text-gray-700">{{ $asalMasalah ?? '-' }}</p>
                     </div>
 
                     @if($aul)
-                    <div>
-                        <p class="text-sm text-gray-500">'Aul</p>
-                        <p class="text-4xl font-bold text-rose-500">{{ $aul }}</p>
+                    <div class="w-px h-10 bg-gray-200 mb-1"></div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">'Aul</p>
+                        <p class="text-4xl font-black text-rose-500">{{ $aul }}</p>
                     </div>
                     @endif
 
                     @if($tashihHeader)
-                    <div>
-                        <p class="text-sm text-gray-500">{{ $aulTashih ? 'Aul Tashih' : 'Tashih' }}</p>
-                        <p class="text-4xl font-bold text-emerald-600">{{ $tashihHeader }}</p>
+                    <div class="w-px h-10 bg-gray-200 mb-1"></div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">{{ $aulTashih ? 'Aul Tashih' : 'Tashih' }}</p>
+                        <p class="text-4xl font-black text-emerald-600">{{ $tashihHeader }}</p>
                     </div>
                     @endif
 
@@ -191,9 +186,11 @@
                         <tr>
                             <th class="px-4 py-3 text-left">Ahli Waris</th>
                             <th class="px-4 py-3 text-center">Bagian</th>
+                            @if($adaSahamAwal)
                             <th class="px-4 py-3 text-center">Saham Awal</th>
+                            @endif
                             @if($adaTashih)
-                                <th class="px-4 py-3 text-center">Saham Setelah Tashih</th>
+                            <th class="px-4 py-3 text-center">Saham Setelah Tashih</th>
                             @endif
                             <th class="px-4 py-3 text-center">Saham / Orang</th>
                         </tr>
@@ -220,10 +217,12 @@
                                             class="px-4 py-3 text-center align-middle font-semibold text-indigo-700 bg-indigo-50/50">
                                             Ashobah
                                         </td>
+                                        @if($adaSahamAwal)
                                         <td rowspan="{{ $ashobahTotalBaris }}"
                                             class="px-4 py-3 text-center align-middle font-semibold bg-indigo-50/50">
                                             {{ $fmt($ashobahSahamAwal) }}
                                         </td>
+                                        @endif
                                         @if($adaTashih)
                                         <td rowspan="{{ $ashobahTotalBaris }}"
                                             class="px-4 py-3 text-center align-middle font-semibold bg-indigo-50/50">
@@ -242,10 +241,12 @@
                                             class="px-4 py-3 text-center align-middle">
                                             {{ $item['bagian'] }}
                                         </td>
+                                        @if($adaSahamAwal)
                                         <td rowspan="{{ $item['jumlah'] }}"
                                             class="px-4 py-3 text-center align-middle">
                                             {{ $fmt($item['saham_awal']) }}
                                         </td>
+                                        @endif
                                         @if($adaTashih)
                                         <td rowspan="{{ $item['jumlah'] }}"
                                             class="px-4 py-3 text-center align-middle">

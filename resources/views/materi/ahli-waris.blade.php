@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ucwords($ahliWaris->nama_ahli_waris) . ' — Materi Faraidh')
+@section('title', ucwords($ahliWaris->nama_ahli_waris) . ' - Materi Faraidh')
 
 @section('content')
 <div class="py-10 bg-gray-50 min-h-screen">
@@ -73,7 +73,8 @@
                 <h2 class="text-sm font-black text-gray-700 uppercase tracking-wider">Dasar Hukum (Dalil)</h2>
             </div>
             <div class="p-6">
-                <p class="text-right text-2xl leading-loose text-gray-800 mb-4 font-arabic" dir="rtl">
+                <p class="text-right text-2xl leading-loose text-gray-800 mb-4" 
+   					style="font-family: 'Amiri', serif;" dir="rtl">
                     {{ $ahliWaris->dalil_arab }}
                 </p>
                 <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
@@ -129,6 +130,15 @@
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Asal Masalah</p>
                                 <p class="text-xl font-black text-gray-700">{{ $tabel['asal_masalah'] }}</p>
                             </div>
+
+                            @if(!empty($tabel['aul']))
+                            <div class="w-px h-8 bg-gray-200"></div>
+                            <div class="text-center">
+                                <p class="text-[10px] font-black text-rose-400 uppercase tracking-widest">'Aul</p>
+                                <p class="text-xl font-black text-rose-500">{{ $tabel['aul'] }}</p>
+                            </div>
+                            @endif
+
                             @if($hasTashih)
                             <div class="w-px h-8 bg-gray-200"></div>
                             <div class="text-center">

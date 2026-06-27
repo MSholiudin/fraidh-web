@@ -8,34 +8,38 @@ class FuzzyMamdaniService
     // KONSTANTA FUNGSI KEANGGOTAAN
     // =========================================================
 
-    // Penghasilan (Rupiah) - Referensi: UMK Jember 2025 (Rp 3.012.197)
+    // Penghasilan (Rupiah) - Referensi: UMK Jember 2026 (Rp 3.000.000)
+    // Overlap: Rendah-Sedang di 2.5jt-3.5jt | Sedang-Tinggi di 5.5jt-6.5jt
     private const PENGHASILAN = [
-        'rendah' => [0, 0, 2_500_000, 3_000_000],
-        'sedang' => [2_500_000, 4_500_000, 6_000_000],
-        'tinggi' => [5_500_000, 6_000_000, 15_000_000, 15_000_000],
+        'rendah' => [0, 0, 2_500_000, 3_500_000],           // trapmf
+        'sedang' => [2_500_000, 4_500_000, 6_500_000],       // trimf
+        'tinggi' => [5_500_000, 7_000_000, 15_000_000, 15_000_000], // trapmf
     ];
 
-    // Usia (Tahun) - Referensi: BPS usia produktif 15-64 tahun
+    // Usia (Tahun) - Referensi: BPS usia produktif
+    // Overlap: Muda-Dewasa di 20-25 | Dewasa-Tua di 50-60
     private const USIA = [
-        'muda'   => [0, 0, 17, 25],
-        'dewasa' => [24, 40, 55],
-        'tua'    => [50, 60, 100, 100],
+        'muda'   => [0, 0, 20, 25],      // trapmf
+        'dewasa' => [20, 40, 60],         // trimf
+        'tua'    => [50, 60, 100, 100],   // trapmf
     ];
 
     // Aset (Rupiah) - Referensi: Kepmenpupr, LPS, World Bank
+    // Overlap: Sedikit-Sedang di 250jt-500jt | Sedang-Banyak di 1.2M-1.5M
     private const ASET = [
-        'sedikit' => [0, 0, 200_000_000, 250_000_000],
-        'sedang'  => [200_000_000, 850_000_000, 1_500_000_000],
-        'banyak'  => [1_200_000_000, 1_500_000_000, 3_000_000_000, 3_000_000_000],
+        'sedikit' => [0, 0, 250_000_000, 500_000_000],                          // trapmf
+        'sedang'  => [250_000_000, 1_000_000_000, 1_500_000_000],               // trimf
+        'banyak'  => [1_200_000_000, 1_500_000_000, 3_000_000_000, 3_000_000_000], // trapmf
     ];
 
     // Output bobot kebutuhan (0-1)
+    // Centroid: sangat_kecil=0.1 | kecil=0.3 | menengah=0.5 | besar=0.7 | sangat_besar=0.9
     private const OUTPUT = [
-        'sangat_kecil' => [0.0, 0.1, 0.3],
-        'kecil'        => [0.2, 0.3, 0.5],
-        'menengah'     => [0.4, 0.5, 0.7],
-        'besar'        => [0.6, 0.8, 0.9],
-        'sangat_besar' => [0.8, 1.0, 1.0, 1.0],
+        'sangat_kecil' => ['type' => 'trimf',  'params' => [0.0, 0.1, 0.2]],
+        'kecil'        => ['type' => 'trimf',  'params' => [0.1, 0.3, 0.5]],
+        'menengah'     => ['type' => 'trimf',  'params' => [0.3, 0.5, 0.7]],
+        'besar'        => ['type' => 'trimf',  'params' => [0.5, 0.7, 0.9]],
+        'sangat_besar' => ['type' => 'trapmf', 'params' => [0.8, 0.9, 1.0, 1.0]],
     ];
 
     // =========================================================
@@ -84,17 +88,25 @@ class FuzzyMamdaniService
     // PUBLIC: HITUNG ISLAH (ENTRY POINT)
     // =========================================================
 
-    public static function calculate_islah($harta_bersih, $ahli_waris_data)
+    /**
+     * Hitung distribusi islah berdasarkan bobot fuzzy.
+     *
+     * @param  float  $harta_ahli_waris  Harta yang menjadi hak ahli waris
+     *                                   (sudah dikurangi bagian Radd ke Baitul Maal)
+     * @param  array  $ahli_waris_data   Data tiap ahli waris
+     * @return array
+     */
+    public static function hitungIslah(float $harta_ahli_waris, array $ahli_waris_data): array
     {
         // 1. Hitung skor fuzzy setiap ahli waris
         $hasil = array_map(function ($data) {
             return [
-                'hubungan'   => $data['hubungan'],
-                'faraidh'    => $data['faraidh'] ?? 0,
+                'hubungan'    => $data['hubungan'],
+                'faraidh'     => $data['faraidh'] ?? 0,
                 'penghasilan' => $data['penghasilan'],
-                'usia'       => $data['usia'],
-                'aset'       => $data['aset'],
-                'skor_fuzzy' => self::hitungSkorFuzzy(
+                'usia'        => $data['usia'],
+                'aset'        => $data['aset'],
+                'skor_fuzzy'  => self::hitungSkorFuzzy(
                     $data['penghasilan'],
                     $data['usia'],
                     $data['aset']
@@ -102,23 +114,31 @@ class FuzzyMamdaniService
             ];
         }, $ahli_waris_data);
 
-        // 2. Distribusikan harta berdasarkan proporsi skor fuzzy
+        // 2. Normalisasi bobot dan distribusi islah
+        // Menggunakan skor_fuzzy presisi penuh (belum dibulatkan)
+        // agar total islah tepat sama dengan harta_ahli_waris
         $total_bobot = array_sum(array_column($hasil, 'skor_fuzzy'));
 
         foreach ($hasil as &$item) {
             if ($total_bobot > 0) {
-                $item['islah']      = ($item['skor_fuzzy'] / $total_bobot) * $harta_bersih;
-                $item['persentase'] = ($item['skor_fuzzy'] / $total_bobot) * 100;
+                $item['bobot_normal'] = $item['skor_fuzzy'] / $total_bobot;
+                $item['islah']        = ($item['skor_fuzzy'] / $total_bobot) * $harta_ahli_waris;
+                $item['persentase']   = $item['bobot_normal'] * 100;
             } else {
-                $item['islah']      = $harta_bersih / count($hasil);
-                $item['persentase'] = 100 / count($hasil);
+                // Fallback: bagi rata jika semua skor 0
+                $n                    = count($hasil);
+                $item['bobot_normal'] = 1 / $n;
+                $item['islah']        = $harta_ahli_waris / $n;
+                $item['persentase']   = 100 / $n;
             }
         }
+        unset($item);
 
         return [
-            'hasil_islah' => $hasil,
-            'total_bobot' => $total_bobot,
-            'total_islah' => array_sum(array_column($hasil, 'islah')),
+            'hasil_islah'       => $hasil,
+            'total_bobot'       => $total_bobot,
+            'harta_ahli_waris'  => $harta_ahli_waris,
+            'total_islah'       => array_sum(array_column($hasil, 'islah')),
         ];
     }
 
@@ -126,13 +146,17 @@ class FuzzyMamdaniService
     // PRIVATE: ENGINE FUZZY MAMDANI
     // =========================================================
 
-    private static function hitungSkorFuzzy($penghasilan, $usia, $aset)
-    {
+    private static function hitungSkorFuzzy(
+        float $penghasilan,
+        float $usia,
+        float $aset
+    ): float {
         $mu_p = self::fuzzifikasiPenghasilan($penghasilan);
         $mu_u = self::fuzzifikasiUsia($usia);
         $mu_a = self::fuzzifikasiAset($aset);
 
         $agregasi = self::inferensi($mu_p, $mu_u, $mu_a);
+
         return self::defuzzifikasi($agregasi);
     }
 
@@ -140,7 +164,7 @@ class FuzzyMamdaniService
     // TAHAP 1: FUZZIFIKASI
     // =========================================================
 
-    private static function fuzzifikasiPenghasilan($nilai)
+    private static function fuzzifikasiPenghasilan(float $nilai): array
     {
         return [
             'rendah' => self::trapmf($nilai, self::PENGHASILAN['rendah']),
@@ -149,7 +173,7 @@ class FuzzyMamdaniService
         ];
     }
 
-    private static function fuzzifikasiUsia($nilai)
+    private static function fuzzifikasiUsia(float $nilai): array
     {
         return [
             'muda'   => self::trapmf($nilai, self::USIA['muda']),
@@ -158,7 +182,7 @@ class FuzzyMamdaniService
         ];
     }
 
-    private static function fuzzifikasiAset($nilai)
+    private static function fuzzifikasiAset(float $nilai): array
     {
         return [
             'sedikit' => self::trapmf($nilai, self::ASET['sedikit']),
@@ -168,17 +192,20 @@ class FuzzyMamdaniService
     }
 
     // =========================================================
-    // TAHAP 2 & 3: INFERENSI + KOMPOSISI (MAX)
+    // TAHAP 2 & 3: INFERENSI (MIN) + KOMPOSISI (MAX)
     // =========================================================
 
-    private static function inferensi($mu_p, $mu_u, $mu_a)
-    {
+    private static function inferensi(
+        array $mu_p,
+        array $mu_u,
+        array $mu_a
+    ): array {
         $agregasi = [
-            'sangat_kecil' => 0,
-            'kecil'        => 0,
-            'menengah'     => 0,
-            'besar'        => 0,
-            'sangat_besar' => 0,
+            'sangat_kecil' => 0.0,
+            'kecil'        => 0.0,
+            'menengah'     => 0.0,
+            'besar'        => 0.0,
+            'sangat_besar' => 0.0,
         ];
 
         foreach (self::RULES as $rule) {
@@ -188,66 +215,83 @@ class FuzzyMamdaniService
             $alpha = min($mu_p[$p], $mu_u[$u], $mu_a[$a]);
 
             // Komposisi MAX
-            $agregasi[$output] = max($agregasi[$output], $alpha);
+            if ($alpha > $agregasi[$output]) {
+                $agregasi[$output] = $alpha;
+            }
         }
 
         return $agregasi;
     }
 
     // =========================================================
-    // TAHAP 4: DEFUZZIFIKASI (CENTROID)
+    // TAHAP 4: DEFUZZIFIKASI (CENTER OF AREA)
     // =========================================================
 
-    private static function defuzzifikasi($agregasi)
+    private static function defuzzifikasi(array $agregasi): float
     {
-        $numerator   = 0;
-        $denominator = 0;
-        $step        = 0.005; // resolusi scan (lebih kecil = lebih akurat)
+        $numerator   = 0.0;
+        $denominator = 0.0;
+        $step        = 0.001; // resolusi scan
 
-        for ($z = 0; $z <= 1.0; $z += $step) {
-            $mu = self::hitungMuGabungan($z, $agregasi);
+        for ($z = 0.0; $z <= 1.0; $z += $step) {
+            $mu           = self::hitungMuGabungan($z, $agregasi);
             $numerator   += $z * $mu;
             $denominator += $mu;
         }
 
-        return $denominator > 0 ? ($numerator / $denominator) : 0.5;
+        return $denominator > 0 ? ($numerator / $denominator) : 0.0;
     }
 
-    private static function hitungMuGabungan($z, $agregasi)
+    private static function hitungMuGabungan(float $z, array $agregasi): float
     {
-        return max(
-            min($agregasi['sangat_kecil'], self::trimf($z,  self::OUTPUT['sangat_kecil'])),
-            min($agregasi['kecil'],        self::trimf($z,  self::OUTPUT['kecil'])),
-            min($agregasi['menengah'],     self::trimf($z,  self::OUTPUT['menengah'])),
-            min($agregasi['besar'],        self::trimf($z,  self::OUTPUT['besar'])),
-            min($agregasi['sangat_besar'], self::trapmf($z, self::OUTPUT['sangat_besar'])),
-        );
+        $mu_values = [];
+
+        foreach (self::OUTPUT as $label => $def) {
+            $mu_mentah = $def['type'] === 'trapmf'
+                ? self::trapmf($z, $def['params'])
+                : self::trimf($z, $def['params']);
+
+            $mu_values[] = min($agregasi[$label], $mu_mentah);
+        }
+
+        return max($mu_values);
     }
 
     // =========================================================
-    // FUNGSI KEANGGOTAAN
+    // FUNGSI KEANGGOTAAN DASAR
     // =========================================================
 
-    private static function trimf($x, $params)
-    {
-        [$a, $b, $c] = $params;
-        if ($x < $a || $x > $c) return 0.0;
-        if ($x == $b) return 1.0;
-        if ($b > $a && $x < $b) return ($x - $a) / ($b - $a);
-        if ($c > $b && $x > $b) return ($c - $x) / ($c - $b);
-        return 1.0;
-    }
-
-    private static function trapmf($x, $params)
+    /**
+     * Trapezoid membership function.
+     * Plateau antara b dan c, naik dari a ke b, turun dari c ke d.
+     * Menggunakan < dan > (bukan <= >=) agar nilai tepat di batas
+     * tetap dihitung dengan benar (misal x=0 saat a=b=0 → 1.0)
+     */
+    private static function trapmf(float $x, array $params): float
     {
         [$a, $b, $c, $d] = $params;
-        
-        // FIX: gunakan < dan > bukan <= dan >=
-        // agar nilai tepat di batas (x=0 saat a=0) tetap dihitung
+
         if ($x < $a || $x > $d) return 0.0;
         if ($x >= $b && $x <= $c) return 1.0;
         if ($b > $a && $x < $b) return ($x - $a) / ($b - $a);
         if ($d > $c && $x > $c) return ($d - $x) / ($d - $c);
+
+        return 1.0;
+    }
+
+    /**
+     * Triangle membership function.
+     * Puncak di b, naik dari a ke b, turun dari b ke c.
+     */
+    private static function trimf(float $x, array $params): float
+    {
+        [$a, $b, $c] = $params;
+
+        if ($x <= $a || $x >= $c) return 0.0;
+        if ($x == $b) return 1.0;
+        if ($b > $a && $x < $b) return ($x - $a) / ($b - $a);
+        if ($c > $b && $x > $b) return ($c - $x) / ($c - $b);
+
         return 1.0;
     }
 }

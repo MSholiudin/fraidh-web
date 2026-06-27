@@ -39,14 +39,14 @@
             </div>
 
             {{-- Ayat --}}
-            <div class="relative z-10 bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                <p class="text-right text-2xl leading-loose text-white mb-4 font-['Amiri']" dir="rtl">
-                    "يُوصِيكُمُ ٱللَّهُ فِىٓ أَوْلَـٰدِكُمْ ۖ لِلذَّكَرِ مِثْلُ حَظِّ ٱلْأُنثَيَيْنِ"
+            <div class="relative z-10 bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 text-center">
+                <p class="text-blue-200 text-xs font-black uppercase tracking-widest mb-4">QS. An-Nisa' : 11</p>
+                <p class="text-2xl leading-loose text-white mb-4 font-['Amiri']" dir="rtl">
+                    يُوصِيكُمُ ٱللَّهُ فِىٓ أَوْلَـٰدِكُمْ ۖ لِلذَّكَرِ مِثْلُ حَظِّ ٱلْأُنثَيَيْنِ
                 </p>
                 <p class="text-blue-100 text-sm italic leading-relaxed">
-                    "Allah mensyariatkan bagimu tentang pembagian pusaka untuk anak-anakmu. Bagian seorang anak laki-laki sama dengan bagian dua orang anak perempuan..."
+                    "Allah mensyariatkan bagimu tentang pembagian harta warisan untuk anak-anakmu. Bagian seorang anak laki-laki sama dengan bagian dua orang anak perempuan..."
                 </p>
-                <p class="mt-3 text-blue-300 text-xs font-black uppercase tracking-widest">QS. An-Nisa' : 11</p>
             </div>
 
             {{-- Fitur --}}

@@ -25,15 +25,17 @@
         <form method="GET" action="{{ route('riwayat.index') }}" class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
             <div class="flex items-center gap-3">
                 <div class="relative flex-1">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                    <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px;" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="6"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
                     <input
                         type="text"
                         name="q"
                         value="{{ request('q') }}"
                         placeholder="Cari nama mayit..."
-                        class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-gray-50"
+                        style="padding-left: 36px;"
+                        class="w-full pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-gray-50"
                     />
                 </div>
                 <button type="submit"

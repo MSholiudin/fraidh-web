@@ -38,14 +38,14 @@
             </div>
 
             {{-- Ayat --}}
-            <div class="relative z-10 bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                <p class="text-right text-2xl leading-loose text-white mb-4 font-['Amiri']" dir="rtl">
-                    "وَتَعَاوَنُوا۟ عَلَى ٱلْبِرِّ وَٱلتَّقْوَىٰ"
+            <div class="relative z-10 bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 text-center">
+                <p class="text-blue-200 text-xs font-black uppercase tracking-widest mb-4">QS. Al-Maidah : 2</p>
+                <p class="text-2xl leading-loose text-white mb-4 font-['Amiri']">
+                    وَتَعَاوَنُوا۟ عَلَى ٱلْبِرِّ وَٱلتَّقْوَىٰ
                 </p>
                 <p class="text-blue-100 text-sm italic leading-relaxed">
                     "Dan tolong-menolonglah kamu dalam (mengerjakan) kebajikan dan takwa, dan jangan tolong-menolong dalam berbuat dosa dan pelanggaran..."
                 </p>
-                <p class="mt-3 text-blue-300 text-xs font-black uppercase tracking-widest">QS. Al-Maidah : 2</p>
             </div>
 
             {{-- Keuntungan daftar --}}
@@ -69,7 +69,7 @@
                 @endforeach
             </div>
 
-            <p class="relative z-10 text-blue-300 text-xs">© 2026 WEWARIS. Hak cipta dilindungi undang-undang.</p>
+            <p class="relative z-10 text-blue-300 text-xs">© 2026 WEWARIS.</p>
         </div>
 
         {{-- ================================================ --}}
