@@ -4,36 +4,24 @@ namespace App\Services;
 
 class FuzzyMamdaniService
 {
-    // =========================================================
-    // KONSTANTA FUNGSI KEANGGOTAAN
-    // =========================================================
-
-    // Penghasilan (Rupiah) - Referensi: UMK Jember 2026 (Rp 3.000.000)
-    // Overlap: Rendah-Sedang di 2.5jt-3.5jt | Sedang-Tinggi di 5.5jt-6.5jt
     private const PENGHASILAN = [
         'rendah' => [0, 0, 2_500_000, 3_500_000],           // trapmf
         'sedang' => [2_500_000, 4_500_000, 6_500_000],       // trimf
         'tinggi' => [5_500_000, 7_000_000, 15_000_000, 15_000_000], // trapmf
     ];
 
-    // Usia (Tahun) - Referensi: BPS usia produktif
-    // Overlap: Muda-Dewasa di 20-25 | Dewasa-Tua di 50-60
     private const USIA = [
         'muda'   => [0, 0, 20, 25],      // trapmf
         'dewasa' => [20, 40, 60],         // trimf
         'tua'    => [50, 60, 100, 100],   // trapmf
     ];
 
-    // Aset (Rupiah) - Referensi: Kepmenpupr, LPS, World Bank
-    // Overlap: Sedikit-Sedang di 250jt-500jt | Sedang-Banyak di 1.2M-1.5M
     private const ASET = [
-        'sedikit' => [0, 0, 250_000_000, 500_000_000],                          // trapmf
-        'sedang'  => [250_000_000, 1_000_000_000, 1_500_000_000],               // trimf
-        'banyak'  => [1_200_000_000, 1_500_000_000, 3_000_000_000, 3_000_000_000], // trapmf
+        'sedikit' => [0, 0, 250_000_000, 500_000_000],
+        'sedang'  => [250_000_000, 1_000_000_000, 1_500_000_000],
+        'banyak'  => [1_200_000_000, 1_500_000_000, 3_000_000_000, 3_000_000_000],
     ];
 
-    // Output bobot kebutuhan (0-1)
-    // Centroid: sangat_kecil=0.1 | kecil=0.3 | menengah=0.5 | besar=0.7 | sangat_besar=0.9
     private const OUTPUT = [
         'sangat_kecil' => ['type' => 'trimf',  'params' => [0.0, 0.1, 0.2]],
         'kecil'        => ['type' => 'trimf',  'params' => [0.1, 0.3, 0.5]],
@@ -42,12 +30,10 @@ class FuzzyMamdaniService
         'sangat_besar' => ['type' => 'trapmf', 'params' => [0.8, 0.9, 1.0, 1.0]],
     ];
 
-    // =========================================================
     // 27 RULE FUZZY MAMDANI
     // Format: [penghasilan, usia, aset, output]
     // Logika: semakin rendah penghasilan, semakin tidak produktif usia,
     // dan semakin sedikit aset → bobot kebutuhan makin besar
-    // =========================================================
 
     private const RULES = [
         // RF01-RF09: Penghasilan Rendah
@@ -115,8 +101,6 @@ class FuzzyMamdaniService
         }, $ahli_waris_data);
 
         // 2. Normalisasi bobot dan distribusi islah
-        // Menggunakan skor_fuzzy presisi penuh (belum dibulatkan)
-        // agar total islah tepat sama dengan harta_ahli_waris
         $total_bobot = array_sum(array_column($hasil, 'skor_fuzzy'));
 
         foreach ($hasil as &$item) {
@@ -125,7 +109,6 @@ class FuzzyMamdaniService
                 $item['islah']        = ($item['skor_fuzzy'] / $total_bobot) * $harta_ahli_waris;
                 $item['persentase']   = $item['bobot_normal'] * 100;
             } else {
-                // Fallback: bagi rata jika semua skor 0
                 $n                    = count($hasil);
                 $item['bobot_normal'] = 1 / $n;
                 $item['islah']        = $harta_ahli_waris / $n;
@@ -231,7 +214,7 @@ class FuzzyMamdaniService
     {
         $numerator   = 0.0;
         $denominator = 0.0;
-        $step        = 0.001; // resolusi scan
+        $step        = 0.001;
 
         for ($z = 0.0; $z <= 1.0; $z += $step) {
             $mu           = self::hitungMuGabungan($z, $agregasi);
@@ -264,8 +247,6 @@ class FuzzyMamdaniService
     /**
      * Trapezoid membership function.
      * Plateau antara b dan c, naik dari a ke b, turun dari c ke d.
-     * Menggunakan < dan > (bukan <= >=) agar nilai tepat di batas
-     * tetap dihitung dengan benar (misal x=0 saat a=b=0 → 1.0)
      */
     private static function trapmf(float $x, array $params): float
     {

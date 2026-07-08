@@ -409,10 +409,7 @@ class FaraidhCalculator
         );
 
         if (!$ada_ahli_waris_lain) {
-            // ======================================================
             // KAKEK + SAUDARA SAJA (tanpa ahli waris lain)
-            // Pilih: Muqosamah vs 1/3
-            // ======================================================
             $total_bagian_saudara = self::hitungTotalKepalaMuaddah($c);
 
             if ($total_bagian_saudara < 4) {
@@ -426,17 +423,9 @@ class FaraidhCalculator
             }
         }
 
-        // 7. Kakek + saudara + ahli waris lain → dihandle di hitungAshobahKakek
+        // 7. Kakek + saudara + ahli waris lain
         return [1/6, "1/6 + Ashobah (sementara)", 'with_others'];
     }
-
-    // =========================================================
-    // HELPER: HITUNG TOTAL KEPALA MUADDAH
-    // Menghitung total bagian saudara yang ikut dihitung bersama kakek
-    // Logika muaddah: saudari sebapak ikut dihitung jika saudara kandung < 4 bagian
-    // KECUALI jika kasus 1 saudari kandung + ada saudara sebapak
-    // (kasus ini saudara sebapak tetap ikut muqosamah namun setelah itu dihandle khusus)
-    // =========================================================
 
     private static function hitungTotalKepalaMuaddah($c)
     {
@@ -629,12 +618,7 @@ class FaraidhCalculator
 
     private static function hitungAshobahKakek($total_harta, $hasil_faraidh, $c, $f, $pilihan_kakek)
     {
-        // ============================================================
-        // KASUS SOLO: Kakek + saudara SAJA (tanpa ahli waris lain)
-        // Porsi sudah dihitung di tentukanPorsiKakek, tinggal bagikan sisa
-        // ============================================================
         if ($pilihan_kakek === 'muqosamah_solo' || $pilihan_kakek === 'sepertiga_solo') {
-            // Bagian kakek sudah ada di hasil_faraidh (dihitung dari porsi)
             $bagian_kakek = 0;
             foreach ($hasil_faraidh as $r) {
                 if ($r['hubungan'] === 'kakek') {
@@ -646,12 +630,7 @@ class FaraidhCalculator
             return self::bagikanSisaSetelahKakek($hasil_faraidh, $sisa_untuk_sdr, $total_harta, $c, true);
         }
 
-        // ============================================================
-        // KASUS WITH_OTHERS: Kakek + saudara + ahli waris lain
-        // Hitung ulang bagian kakek dari 3 pilihan, lalu bagikan sisa
-        // ============================================================
         if ($pilihan_kakek === 'with_others') {
-            // Hitung total furud (selain kakek dan saudara)
             $nominal_furud = 0;
             foreach ($hasil_faraidh as $r) {
                 if ($r['hubungan'] === 'kakek') continue;
@@ -782,12 +761,6 @@ class FaraidhCalculator
             unset($r);
             return $hasil_faraidh;
         }
-
-        // ============================================================
-        // KASUS NORMAL: Bagikan sisa ke saudara yang berhak
-        // Urutan prioritas: kandung laki > kandung perempuan > sebapak
-        // Catatan: jika ada sdr laki kandung → sdr sebapak mahjub
-        // ============================================================
 
         // Tentukan siapa yang berhak menerima sisa
         $ada_sdr_kand_lk = $c['sdr_kand_lk'] > 0;
